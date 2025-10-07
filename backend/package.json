@@ -31,6 +31,13 @@
     "rimraf": "^5.0.10",
     "supertest": "^6.3.3"
   },
+  "vercel": {
+    "functions": {
+      "api/index.js": {
+        "runtime": "nodejs18.x"
+      }
+    }
+  },
   "engines": {
     "node": ">=18.0.0"
   },

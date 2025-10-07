@@ -45,12 +45,22 @@ router.get('/init-db', async (req, res) => {
   }
 });
 
-// Configure multer for file uploads
+// Configure multer for file uploads (use /tmp on serverless)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = 'uploads/kyc';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    const baseDir = process.env.UPLOAD_DIR || (process.env.VERCEL ? '/tmp' : 'uploads');
+    const uploadDir = `${baseDir}/kyc`;
+    try {
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+    } catch (e) {
+      // fallback to /tmp if any error
+      const fallback = '/tmp/kyc';
+      if (!fs.existsSync(fallback)) {
+        fs.mkdirSync(fallback, { recursive: true });
+      }
+      return cb(null, fallback);
     }
     cb(null, uploadDir);
   },

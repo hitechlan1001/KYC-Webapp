@@ -7,6 +7,10 @@ function authHeaders() {
 }
 
 export const api = {
+  // Health
+  health: (options?: RequestInit) =>
+    fetch(`${API_BASE_URL}/health`, { ...(options || {}) }),
+
   // Auth endpoints
   login: (username: string, password: string) =>
     fetch(`${API_BASE_URL}/api/auth/login`, {

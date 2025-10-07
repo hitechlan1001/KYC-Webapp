@@ -105,6 +105,20 @@ export default function KYC() {
     setIsSubmitting(true);
 
     try {
+      // Check backend availability first for clearer error
+      try {
+        const health = await api.health({ method: 'GET' });
+        if (!health.ok) {
+          toast.error('Server unavailable. Please try again later.');
+          setIsSubmitting(false);
+          return;
+        }
+      } catch {
+        toast.error('Cannot reach server. Please ensure the backend is running.');
+        setIsSubmitting(false);
+        return;
+      }
+
       // Simple client-side network timeout (15s) to fail fast on bad connections
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -146,14 +160,19 @@ export default function KYC() {
 
       const response = await api.submitKYC(formData, { signal: controller.signal });
 
-      const result = await response.json();
+      let result: any = {};
+      try {
+        result = await response.json();
+      } catch (_) {
+        // Ignore JSON parse error; handled below
+      }
 
       if (response.ok) {
         setSubmissionId(result.submissionId);
         toast.success('KYC submission received successfully!');
       } else {
         // Backend provides either error or message; normalize it
-        const errorMessage = result?.error || result?.message || 'Failed to submit KYC data';
+        const errorMessage = result?.error || result?.message || (response.status === 400 ? 'Please complete required fields.' : 'Failed to submit KYC data');
         throw new Error(errorMessage);
       }
     } catch (error) {
