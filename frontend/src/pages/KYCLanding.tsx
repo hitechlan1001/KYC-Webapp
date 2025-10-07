@@ -19,7 +19,7 @@ export default function KYCLanding() {
           <h1 className="text-4xl font-bold text-white mb-4">
             KYC Verification System
           </h1>
-          <p className="text-xl text-white/70 max-w-3xl mx-auto">
+          <p className="text-xl text-white/85 max-w-3xl mx-auto">
             Secure identity verification for poker platform users. Submit your information 
             and verify your identity to ensure a safe and trusted gaming environment.
           </p>
@@ -87,12 +87,12 @@ export default function KYCLanding() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-6">
+              <p className="text-white/80 mb-6">
                 Provide your personal information, upload identity documents, and complete 
                 the verification process. We'll collect device information to ensure security.
               </p>
               <Link to="/kyc">
-                <Button className="w-full bg-violet-600 hover:bg-violet-700" size="lg">
+                <Button className="w-full" size="lg" variant="dark">
                   <Upload className="w-4 h-4 mr-2" />
                   Start KYC Submission
                 </Button>
@@ -115,12 +115,12 @@ export default function KYCLanding() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-6">
+              <p className="text-white/80 mb-6">
                 Already submitted your KYC information? Check the status of your 
                 verification using your submission ID.
               </p>
               <Link to="/kyc/status">
-                <Button className="w-full border-fuchsia-300 text-fuchsia-700 hover:bg-fuchsia-50" size="lg" variant="outline">
+                <Button className="w-full" size="lg" variant="dark">
                   <Eye className="w-4 h-4 mr-2" />
                   Check Status
                 </Button>
@@ -136,7 +136,7 @@ export default function KYCLanding() {
               <CardTitle className="text-lg">What We Collect</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-white/80">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
                   Personal information (name, address, contact details)
@@ -166,7 +166,7 @@ export default function KYCLanding() {
               <CardTitle className="text-lg">Security & Privacy</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-white/80">
                 <li className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-blue-500" />
                   All data is encrypted in transit and at rest

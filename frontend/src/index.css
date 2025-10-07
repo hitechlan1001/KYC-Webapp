@@ -94,7 +94,7 @@
     --secondary-foreground: 210 40% 98%;
 
     --muted: 258 26% 20%;
-    --muted-foreground: 258 22% 70%;
+    --muted-foreground: 0 0% 85%;
 
     --accent: 291 92% 20%;
     --accent-foreground: 0 0% 100%;
@@ -657,7 +657,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-white;
     font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     width: 100%;
     margin: 0;

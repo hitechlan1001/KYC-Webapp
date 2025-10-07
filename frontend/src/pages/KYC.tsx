@@ -105,6 +105,10 @@ export default function KYC() {
     setIsSubmitting(true);
 
     try {
+      // Simple client-side network timeout (15s) to fail fast on bad connections
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
       const formData = new FormData();
       
       // Add form data
@@ -140,7 +144,7 @@ export default function KYC() {
         plugins: deviceData.plugins
       }));
 
-      const response = await api.submitKYC(formData);
+      const response = await api.submitKYC(formData, { signal: controller.signal });
 
       const result = await response.json();
 
@@ -148,11 +152,29 @@ export default function KYC() {
         setSubmissionId(result.submissionId);
         toast.success('KYC submission received successfully!');
       } else {
-        throw new Error(result.message || 'Failed to submit KYC data');
+        // Backend provides either error or message; normalize it
+        const errorMessage = result?.error || result?.message || 'Failed to submit KYC data';
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('KYC submission error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to submit KYC data');
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        toast.error('Network timeout. Please check your connection and try again.');
+      } else if (error instanceof Error) {
+        // Friendly mapping for common server/network errors
+        const lower = error.message.toLowerCase();
+        if (lower.includes('network') || lower.includes('fetch') || lower.includes('failed to')) {
+          toast.error('Network error. Please try again.');
+        } else if (lower.includes('too many') || lower.includes('rate')) {
+          toast.error('Too many requests. Please wait a moment and retry.');
+        } else if (lower.includes('file too large') || lower.includes('entity too large')) {
+          toast.error('One of the files is too large. Max size is 50MB.');
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        toast.error('Unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -207,7 +229,7 @@ export default function KYC() {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">KYC Verification</h1>
-          <p className="text-white/70">
+          <p className="text-white/85">
             Please provide your information for identity verification. All fields marked with * are required.
           </p>
         </div>
@@ -379,7 +401,7 @@ export default function KYC() {
               {deviceData && (
                 <div className="border-t pt-6">
                   <h3 className="text-lg font-semibold mb-4">Device Information</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-black/80  text-sm">
                     <p><strong>IP Address:</strong> {ipAddress || 'Collecting...'}</p>
                     <p><strong>Location:</strong> {geolocation ? `${geolocation.city}, ${geolocation.country}` : 'Collecting...'}</p>
                     <p><strong>Device:</strong> {deviceData.browserInfo?.name} on {deviceData.platform}</p>
@@ -394,7 +416,7 @@ export default function KYC() {
               {/* Submit Button */}
               <div className="border-t pt-6">
                 <Button
-                  type="submit"
+                  type="submit"  
                   disabled={isSubmitting || !deviceData}
                   className="w-full"
                 >

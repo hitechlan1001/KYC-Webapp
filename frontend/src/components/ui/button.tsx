@@ -19,6 +19,7 @@ const buttonVariants = cva(
           ghost: "hover:bg-accent hover:text-accent-foreground",
           link: "text-primary underline-offset-4 hover:underline",
           galaxy: "bg-gradient-to-r from-[#1a1f4a] to-[#4a2c85] text-white border-none shadow-[0_10px_25px_rgba(26,31,74,0.3)] hover:transform hover:-translate-y-0.5 hover:shadow-[0_15px_35px_rgba(26,31,74,0.4)] hover:bg-gradient-to-r hover:from-[#2d1b69] hover:to-[#1a1f4a]",
+          dark: "bg-white/10 text-white border border-white/20 hover:bg-white/15 backdrop-blur-sm shadow-[0_6px_20px_rgba(0,0,0,0.25)]",
         },
       size: {
         default: "h-10 px-4 py-2",

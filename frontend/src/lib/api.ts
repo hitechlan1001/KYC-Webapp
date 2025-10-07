@@ -23,10 +23,11 @@ export const api = {
     fetch(`${API_BASE_URL}/api/auth/verify`, { headers: { ...authHeaders() } }),
 
   // KYC endpoints
-  submitKYC: (formData: FormData) => 
+  submitKYC: (formData: FormData, options?: RequestInit) => 
     fetch(`${API_BASE_URL}/api/kyc/submit`, {
       method: 'POST',
       body: formData,
+      ...(options || {}),
     }),
 
   getKYCStatus: (submissionId: string) =>

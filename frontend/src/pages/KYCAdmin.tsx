@@ -201,7 +201,7 @@ export default function KYCAdmin() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-white">KYC Management</h1>
-          <p className="text-white/70">Review and manage KYC submissions</p>
+          <p className="text-white/85">Review and manage KYC submissions</p>
         </div>
       </div>
 

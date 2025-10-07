@@ -83,7 +83,7 @@ export default function KYCStatus() {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">KYC Status Check</h1>
-          <p className="text-white/70">Enter your submission ID to check the status of your KYC verification.</p>
+          <p className="text-white/85">Enter your submission ID to check the status of your KYC verification.</p>
         </div>
 
         <Card className="mb-6">
@@ -210,7 +210,7 @@ export default function KYCStatus() {
         )}
 
         <div className="mt-8 text-center">
-          <p className="text-sm text-white/70">
+          <p className="text-sm text-white/85">
             Need to submit KYC information?{' '}
             <a 
               href="/kyc" 
