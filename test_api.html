@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYC API Test</title>
+</head>
+<body>
+    <h1>KYC API Test</h1>
+    <button onclick="testAPI()">Test API Connection</button>
+    <button onclick="initDB()">Initialize Database</button>
+    <button onclick="testSubmissions()">Test Submissions Endpoint</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing API connection...';
+            
+            try {
+                // Test backend health endpoint
+                const response = await fetch('http://localhost:8081/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h3>✅ API Connection Successful!</h3>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p><strong>Timestamp:</strong> ${data.timestamp}</p>
+                        <p><strong>Version:</strong> ${data.version}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<h3>❌ API Error: ${response.status}</h3>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ Connection Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>Make sure the backend server is running on port 8081</p>
+                `;
+            }
+        }
+
+        async function initDB() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Initializing database...';
+            
+            try {
+                const response = await fetch('http://localhost:8081/api/kyc/init-db');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h3>✅ Database Initialization Successful!</h3>
+                        <p><strong>Message:</strong> ${data.message}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<h3>❌ Database Error: ${response.status}</h3><p>${data.message}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ Database Initialization Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `;
+            }
+        }
+
+        async function testSubmissions() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing submissions endpoint...';
+            
+            try {
+                const response = await fetch('http://localhost:8081/api/kyc/submissions?page=1&limit=20');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h3>✅ Submissions Endpoint Working!</h3>
+                        <p><strong>Submissions found:</strong> ${data.data.length}</p>
+                        <p><strong>Total:</strong> ${data.pagination.total}</p>
+                        <p><strong>Page:</strong> ${data.pagination.page} of ${data.pagination.totalPages}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<h3>❌ Submissions Error: ${response.status}</h3><p>${data.message}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ Submissions Test Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
