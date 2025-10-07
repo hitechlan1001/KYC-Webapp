@@ -401,7 +401,7 @@ export default function KYC() {
               {deviceData && (
                 <div className="border-t pt-6">
                   <h3 className="text-lg font-semibold mb-4">Device Information</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-black/80  text-sm">
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-black/80 text-sm">
                     <p><strong>IP Address:</strong> {ipAddress || 'Collecting...'}</p>
                     <p><strong>Location:</strong> {geolocation ? `${geolocation.city}, ${geolocation.country}` : 'Collecting...'}</p>
                     <p><strong>Device:</strong> {deviceData.browserInfo?.name} on {deviceData.platform}</p>
@@ -416,7 +416,7 @@ export default function KYC() {
               {/* Submit Button */}
               <div className="border-t pt-6">
                 <Button
-                  type="submit"  
+                  type="submit"
                   disabled={isSubmitting || !deviceData}
                   className="w-full"
                 >
