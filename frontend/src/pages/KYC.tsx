@@ -201,21 +201,21 @@ export default function KYC() {
 
   if (submissionId) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#263144] via-[#253244] to-[#494949] flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+            <div className="mx-auto mb-4 w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-8 h-8 text-green-300" />
             </div>
-            <CardTitle className="text-2xl text-green-600">Submission Successful!</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl text-green-300">Submission Successful!</CardTitle>
+            <CardDescription className="text-white/80">
               Your KYC information has been received and is being processed.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">Submission ID:</p>
-              <p className="font-mono text-sm break-all">{submissionId}</p>
+            <div className="bg-white/5 p-4 rounded-lg">
+              <p className="text-sm text-white/70 mb-2">Submission ID:</p>
+              <p className="font-mono text-sm break-all text-white">{submissionId}</p>
             </div>
             <Alert>
               <AlertCircle className="h-4 w-4" />
@@ -226,13 +226,14 @@ export default function KYC() {
             <Button 
               onClick={() => window.location.reload()} 
               className="w-full"
-              variant="outline"
+              variant="dark"
             >
               Submit Another KYC
             </Button>
             <Button 
               onClick={() => navigate('/')} 
               className="w-full"
+              variant="galaxy"
             >
               Go to Home
             </Button>

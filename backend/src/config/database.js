@@ -14,6 +14,17 @@ const dbConfig = {
   ssl: false,
 };
 
+// Config without database for initial connection
+const dbConfigWithoutDb = {
+  host: process.env.EXTERNAL_DB_HOST,
+  port: process.env.EXTERNAL_DB_PORT || 3306,
+  user: process.env.EXTERNAL_DB_USER,
+  password: process.env.EXTERNAL_DB_PASSWORD,
+  charset: 'utf8mb4',
+  timezone: '+00:00',
+  ssl: false,
+};
+
 if (!dbConfig.host || !dbConfig.user || !dbConfig.password || !dbConfig.database) {
   throw new Error('Missing required database environment variables. Please check your .env file.');
 }
@@ -34,13 +45,17 @@ export const getConnection = async () => {
 
 export const connectDatabase = async () => {
   try {
+    // Connect directly to the existing database
+    console.log(`Connecting to database: ${dbConfig.database}`);
     const conn = await getConnection();
     const [rows] = await conn.execute('SELECT 1 as test');
+    console.log('Database connected successfully');
 
     await initializeKYCTables();
     return { conn };
   } catch (error) {
-    throw error;
+    console.error('Database connection error:', error.message);
+    throw new Error(`Cannot connect to database '${dbConfig.database}'. Please check your database permissions.`);
   }
 };
 
