@@ -1,13 +1,12 @@
 import nodemailer from 'nodemailer';
-import fetch from 'node-fetch';
 
 // Email configuration
 const createEmailTransporter = () => {
   return nodemailer.createTransporter({
     service: 'gmail',
     auth: {
-      user: process.env.ADMIN_EMAIL,
-      pass: process.env.ADMIN_EMAIL_PASSWORD
+      user: process.env.SERVICE_EMAIL,
+      pass: process.env.SERVICE_EMAIL_PASSWORD
     }
   });
 };
@@ -16,6 +15,9 @@ const createEmailTransporter = () => {
 export const sendEmailNotification = async (kycData, files) => {
   try {
     const transporter = createEmailTransporter();
+    
+    // Perform security analysis
+    const securityAnalysis = await analyzeSecurity(kycData);
     
     const htmlContent = `
       <h2>New KYC Submission</h2>
@@ -31,26 +33,53 @@ export const sendEmailNotification = async (kycData, files) => {
         <li><strong>Postal Code:</strong> ${kycData.postalCode || 'Not provided'}</li>
       </ul>
       
-      <h3>Poker Platform Information:</h3>
+      <h3>Player Information:</h3>
       <ul>
-        <li><strong>Platform:</strong> ${kycData.pokerPlatform || 'Not provided'}</li>
         <li><strong>Player ID:</strong> ${kycData.playerId || 'Not provided'}</li>
       </ul>
       
       <h3>Device Information:</h3>
       <ul>
         <li><strong>IP Address:</strong> ${kycData.ipAddress || 'Not available'}</li>
-        <li><strong>Location:</strong> ${kycData.geolocation ? `${kycData.geolocation.city}, ${kycData.geolocation.country}` : 'Not available'}</li>
+        <li><strong>Browser Location:</strong> ${kycData.geolocation ? `${kycData.geolocation.city}, ${kycData.geolocation.country}` : 'Not available'}</li>
         <li><strong>Browser:</strong> ${kycData.deviceData?.browserInfo?.name || 'Not available'}</li>
         <li><strong>Platform:</strong> ${kycData.deviceData?.platform || 'Not available'}</li>
         <li><strong>Screen Resolution:</strong> ${kycData.deviceData?.screenResolution || 'Not available'}</li>
         <li><strong>Device ID:</strong> ${kycData.deviceData?.deviceId || 'Not available'}</li>
       </ul>
       
+      <h3>Real Location (IP2Location):</h3>
+      <ul>
+        <li><strong>Real Country:</strong> ${securityAnalysis.realLocation?.country || 'Not available'}</li>
+        <li><strong>Real City:</strong> ${securityAnalysis.realLocation?.city || 'Not available'}</li>
+        <li><strong>Real Region:</strong> ${securityAnalysis.realLocation?.region || 'Not available'}</li>
+        <li><strong>ISP:</strong> ${securityAnalysis.realLocation?.isp || 'Not available'}</li>
+        <li><strong>Organization:</strong> ${securityAnalysis.realLocation?.organization || 'Not available'}</li>
+        <li><strong>Domain:</strong> ${securityAnalysis.realLocation?.domain || 'Not available'}</li>
+        <li><strong>Usage Type:</strong> ${securityAnalysis.realLocation?.usageType || 'Not available'}</li>
+        <li><strong>Timezone:</strong> ${securityAnalysis.realLocation?.timezone || 'Not available'}</li>
+        <li><strong>Coordinates:</strong> ${securityAnalysis.realLocation?.latitude}, ${securityAnalysis.realLocation?.longitude}</li>
+      </ul>
+      
+      <h3>Proxy/VPN Analysis:</h3>
+      <ul>
+        <li><strong>VPN/Proxy Detected:</strong> ${securityAnalysis.vpnDetected ? '⚠️ YES' : '✅ No'}</li>
+        ${securityAnalysis.proxyInfo ? `
+        <li><strong>Proxy Type:</strong> ${securityAnalysis.proxyInfo.proxyType || 'Unknown'}</li>
+        <li><strong>Provider:</strong> ${securityAnalysis.proxyInfo.provider || 'Unknown'}</li>
+        <li><strong>Is VPN:</strong> ${securityAnalysis.proxyInfo.isVpn ? 'Yes' : 'No'}</li>
+        <li><strong>Is Tor:</strong> ${securityAnalysis.proxyInfo.isTor ? 'Yes' : 'No'}</li>
+        <li><strong>Is Data Center:</strong> ${securityAnalysis.proxyInfo.isDataCenter ? 'Yes' : 'No'}</li>
+        <li><strong>Threat Level:</strong> ${securityAnalysis.proxyInfo.threat || 'Unknown'}</li>
+        <li><strong>Is Spammer:</strong> ${securityAnalysis.proxyInfo.isSpammer ? '⚠️ YES' : 'No'}</li>
+        ` : ''}
+      </ul>
+      
       <h3>Security Analysis:</h3>
       <ul>
-        <li><strong>VPN Detection:</strong> ${kycData.vpnDetected ? '⚠️ VPN DETECTED' : '✅ No VPN detected'}</li>
-        <li><strong>Location Mismatch:</strong> ${kycData.locationMismatch ? '⚠️ Location mismatch detected' : '✅ Location consistent'}</li>
+        <li><strong>Fraud Score:</strong> ${securityAnalysis.fraudScore}/100 ${securityAnalysis.fraudRisk === 'high' ? '🔴 HIGH RISK' : securityAnalysis.fraudRisk === 'medium' ? '🟡 MEDIUM RISK' : '🟢 LOW RISK'}</li>
+        <li><strong>Location Mismatch:</strong> ${securityAnalysis.locationMismatch ? '⚠️ Location mismatch detected' : '✅ Location consistent'}</li>
+        <li><strong>Analysis Confidence:</strong> ${securityAnalysis.confidence}</li>
         <li><strong>Device Fingerprint:</strong> ${kycData.deviceData?.deviceFingerprint || 'Not available'}</li>
       </ul>
       
@@ -58,7 +87,7 @@ export const sendEmailNotification = async (kycData, files) => {
     `;
 
     const mailOptions = {
-      from: process.env.ADMIN_EMAIL,
+      from: process.env.SERVICE_EMAIL,
       to: process.env.ADMIN_EMAIL,
       subject: `New KYC Submission - ${kycData.fullName}`,
       html: htmlContent,
@@ -87,6 +116,9 @@ export const sendTelegramNotification = async (kycData) => {
       return;
     }
 
+    // Perform security analysis
+    const securityAnalysis = await analyzeSecurity(kycData);
+
     const message = `
 🚨 *New KYC Submission*
 
@@ -94,16 +126,36 @@ export const sendTelegramNotification = async (kycData) => {
 • Name: ${kycData.fullName}
 • Email: ${kycData.email || 'Not provided'}
 • Phone: ${kycData.phone || 'Not provided'}
-• Location: ${kycData.geolocation ? `${kycData.geolocation.city}, ${kycData.geolocation.country}` : 'Not available'}
+• User Location: ${kycData.geolocation ? `${kycData.geolocation.city}, ${kycData.geolocation.country}` : 'Not available'}
 
-🎮 *Poker Platform:*
-• Platform: ${kycData.pokerPlatform || 'Not provided'}
+🎮 *Player Info:*
 • Player ID: ${kycData.playerId || 'Not provided'}
 
-🔍 *Security Analysis:*
+🌍 *Real Location (IP2Location):*
+• Country: ${securityAnalysis.realLocation?.country || 'Not available'}
+• City: ${securityAnalysis.realLocation?.city || 'Not available'}
+• Region: ${securityAnalysis.realLocation?.region || 'Not available'}
+• ISP: ${securityAnalysis.realLocation?.isp || 'Not available'}
+• Organization: ${securityAnalysis.realLocation?.organization || 'Not available'}
+• Usage Type: ${securityAnalysis.realLocation?.usageType || 'Not available'}
+
+🔍 *Proxy/VPN Analysis:*
+• VPN/Proxy: ${securityAnalysis.vpnDetected ? '⚠️ DETECTED' : '✅ Clean'}
+${securityAnalysis.proxyInfo ? `
+• Type: ${securityAnalysis.proxyInfo.proxyType || 'Unknown'}
+• Provider: ${securityAnalysis.proxyInfo.provider || 'Unknown'}
+• VPN: ${securityAnalysis.proxyInfo.isVpn ? 'Yes' : 'No'}
+• Tor: ${securityAnalysis.proxyInfo.isTor ? 'Yes' : 'No'}
+• Data Center: ${securityAnalysis.proxyInfo.isDataCenter ? 'Yes' : 'No'}
+• Threat: ${securityAnalysis.proxyInfo.threat || 'Unknown'}
+• Spammer: ${securityAnalysis.proxyInfo.isSpammer ? '⚠️ YES' : 'No'}
+` : ''}
+
+🛡️ *Security Analysis:*
 • IP: ${kycData.ipAddress || 'Not available'}
-• VPN: ${kycData.vpnDetected ? '⚠️ DETECTED' : '✅ Clean'}
-• Location Match: ${kycData.locationMismatch ? '⚠️ MISMATCH' : '✅ Consistent'}
+• Fraud Score: ${securityAnalysis.fraudScore}/100 ${securityAnalysis.fraudRisk === 'high' ? '🔴 HIGH' : securityAnalysis.fraudRisk === 'medium' ? '🟡 MEDIUM' : '🟢 LOW'}
+• Location Match: ${securityAnalysis.locationMismatch ? '⚠️ MISMATCH' : '✅ Consistent'}
+• Confidence: ${securityAnalysis.confidence}
 • Device: ${kycData.deviceData?.browserInfo?.name || 'Unknown'}
 
 ⏰ *Submitted:* ${new Date().toLocaleString()}
@@ -132,21 +184,128 @@ export const sendTelegramNotification = async (kycData) => {
   }
 };
 
-// Detect VPN and location mismatch
-export const analyzeSecurity = (kycData) => {
+// Detect VPN and get real location using IP2Location API
+export const analyzeSecurity = async (kycData) => {
   const analysis = {
     vpnDetected: false,
-    locationMismatch: false
+    locationMismatch: false,
+    realLocation: null,
+    confidence: 'low'
+  };
+
+  if (!kycData.ipAddress) {
+    return analysis;
+  }
+
+  try {
+    const apiKey = process.env.IP2LOCATION_API_KEY;
+    if (!apiKey) {
+      console.warn('IP2Location API key not configured, using fallback detection');
+      return fallbackSecurityAnalysis(kycData);
+    }
+
+    // Call IP2Location API
+    const response = await fetch(`https://api.ip2location.io/?key=${apiKey}&ip=${kycData.ipAddress}`);
+    
+    if (!response.ok) {
+      console.error('IP2Location API error:', response.status);
+      return fallbackSecurityAnalysis(kycData);
+    }
+
+    const ipData = await response.json();
+    
+    // Enhanced VPN/Proxy detection using detailed proxy information
+    analysis.vpnDetected = ipData.is_proxy === true || 
+                          (ipData.proxy && (ipData.proxy.is_vpn === true || 
+                                           ipData.proxy.is_tor === true || 
+                                           ipData.proxy.is_data_center === true ||
+                                           ipData.proxy.is_public_proxy === true ||
+                                           ipData.proxy.is_web_proxy === true));
+
+    // Get comprehensive real location data
+    analysis.realLocation = {
+      country: ipData.country_name,
+      countryCode: ipData.country_code,
+      region: ipData.region_name,
+      city: ipData.city_name,
+      latitude: ipData.latitude,
+      longitude: ipData.longitude,
+      zipCode: ipData.zip_code,
+      timezone: ipData.time_zone_info?.olson || ipData.time_zone,
+      isp: ipData.isp,
+      organization: ipData.as,
+      domain: ipData.domain,
+      usageType: ipData.usage_type,
+      addressType: ipData.address_type,
+      netSpeed: ipData.net_speed,
+      elevation: ipData.elevation,
+      continent: ipData.continent?.name,
+      currency: ipData.country?.currency?.code,
+      language: ipData.country?.language?.name
+    };
+
+    // Enhanced proxy/VPN information
+    analysis.proxyInfo = ipData.proxy ? {
+      proxyType: ipData.proxy.proxy_type,
+      provider: ipData.proxy.provider,
+      isVpn: ipData.proxy.is_vpn,
+      isTor: ipData.proxy.is_tor,
+      isDataCenter: ipData.proxy.is_data_center,
+      isPublicProxy: ipData.proxy.is_public_proxy,
+      isWebProxy: ipData.proxy.is_web_proxy,
+      isResidentialProxy: ipData.proxy.is_residential_proxy,
+      isSpammer: ipData.proxy.is_spammer,
+      isScanner: ipData.proxy.is_scanner,
+      isBotnet: ipData.proxy.is_botnet,
+      threat: ipData.proxy.threat,
+      lastSeen: ipData.proxy.last_seen
+    } : null;
+
+    // Fraud score analysis
+    analysis.fraudScore = ipData.fraud_score || 0;
+    analysis.fraudRisk = analysis.fraudScore > 75 ? 'high' : 
+                        analysis.fraudScore > 50 ? 'medium' : 'low';
+
+    analysis.confidence = 'high';
+
+    // Check location mismatch between real location and user-provided location
+    if (kycData.country && ipData.country_name) {
+      const realCountry = ipData.country_name.toLowerCase();
+      const userCountry = kycData.country.toLowerCase();
+      
+      if (realCountry !== userCountry) {
+        analysis.locationMismatch = true;
+      }
+    }
+
+    console.log('IP2Location analysis:', {
+      ip: kycData.ipAddress,
+      vpnDetected: analysis.vpnDetected,
+      fraudScore: analysis.fraudScore,
+      fraudRisk: analysis.fraudRisk,
+      proxyInfo: analysis.proxyInfo,
+      realLocation: analysis.realLocation,
+      locationMismatch: analysis.locationMismatch
+    });
+
+  } catch (error) {
+    console.error('Error calling IP2Location API:', error);
+    return fallbackSecurityAnalysis(kycData);
+  }
+
+  return analysis;
+};
+
+// Fallback security analysis when API is not available
+const fallbackSecurityAnalysis = (kycData) => {
+  const analysis = {
+    vpnDetected: false,
+    locationMismatch: false,
+    realLocation: null,
+    confidence: 'low'
   };
 
   // Simple VPN detection based on common VPN IP ranges
-  const vpnRanges = [
-    '10.0.0.0/8',
-    '172.16.0.0/12', 
-    '192.168.0.0/16'
-  ];
-  
-  // Check if IP is in private range (might indicate VPN)
   if (kycData.ipAddress) {
     const ip = kycData.ipAddress;
     if (ip.startsWith('10.') || ip.startsWith('172.') || ip.startsWith('192.168.')) {
@@ -159,7 +318,6 @@ export const analyzeSecurity = (kycData) => {
     const geoCountry = kycData.geolocation.country;
     const userCountry = kycData.country;
     
-    // Simple country comparison (you can make this more sophisticated)
     if (geoCountry.toLowerCase() !== userCountry.toLowerCase()) {
       analysis.locationMismatch = true;
     }

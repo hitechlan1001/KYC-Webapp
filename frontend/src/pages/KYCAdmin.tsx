@@ -198,11 +198,31 @@ export default function KYCAdmin() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#263144] via-[#253244] to-[#494949] py-8 px-4 space-y-6">
       <HomeButton />
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-white">KYC Management</h1>
-          <p className="text-white/85">Review and manage KYC submissions</p>
+      
+      {/* Header with Logo */}
+      <div className="text-center mb-8">
+        <div className="w-[80px] h-[80px] mx-auto mb-4 relative">
+          <img
+            src="/logo.png"
+            alt="Union Logo"
+            className="w-full h-full object-contain"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              (
+                e.currentTarget.nextElementSibling as HTMLElement
+              ).style.display = "block";
+            }}
+          />
+          {/* SVG Fallback */}
+          <div
+            className="w-full h-full bg-cyan-500/20 rounded-full items-center justify-center text-white text-xl font-bold flex"
+            style={{ display: "none" }}
+          >
+            UU
+          </div>
         </div>
+        <h1 className="text-3xl font-bold text-white mb-2">KYC Management</h1>
+        <p className="text-white/85">Review and manage KYC submissions</p>
       </div>
 
       {/* Filters */}

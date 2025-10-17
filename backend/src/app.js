@@ -7,7 +7,6 @@ import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 
 import kycRoutes from "./routes/kyc.js";
-import authRoutes from "./routes/auth.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 dotenv.config();
@@ -55,7 +54,6 @@ app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-app.use("/api/auth", authRoutes);
 app.use("/api/kyc", kycRoutes);
 
 app.use("*", (req, res) => {

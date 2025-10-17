@@ -4,7 +4,6 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { sendEmailNotification, sendTelegramNotification, analyzeSecurity } from '../services/notification.js';
-import { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 

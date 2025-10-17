@@ -25,24 +25,11 @@ const kycSchema = z.object({
   state: z.string().optional(),
   country: z.string().optional(),
   postalCode: z.string().optional(),
-  pokerPlatform: z.string().optional(),
   playerId: z.string().optional(),
 });
 
 type KYCFormData = z.infer<typeof kycSchema>;
 
-const POKER_PLATFORMS = [
-  'ClubGG',
-  'PokerStars',
-  '888poker',
-  'partypoker',
-  'WSOP.com',
-  'GGPoker',
-  'Winamax',
-  'Unibet',
-  'Bet365',
-  'Other'
-];
 
 export default function KYC() {
   const navigate = useNavigate();
@@ -66,7 +53,6 @@ export default function KYC() {
     resolver: zodResolver(kycSchema),
   });
 
-  const pokerPlatform = watch('pokerPlatform');
 
   useEffect(() => {
     // Collect device fingerprinting data when component mounts
@@ -348,32 +334,16 @@ export default function KYC() {
                 </div>
               </div>
 
-              {/* Poker Platform Information */}
+              {/* Player ID */}
               <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">Poker Platform Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="pokerPlatform">Poker Platform</Label>
-                    <Select onValueChange={(value) => setValue('pokerPlatform', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a platform" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {POKER_PLATFORMS.map((platform) => (
-                          <SelectItem key={platform} value={platform}>
-                            {platform}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
+                <h3 className="text-lg font-semibold mb-4">Player Information</h3>
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <Label htmlFor="playerId">Player ID</Label>
                     <Input
                       id="playerId"
                       {...register('playerId')}
-                      placeholder="Your player ID on the platform"
+                      placeholder="Your player ID"
                     />
                   </div>
                 </div>
@@ -381,7 +351,7 @@ export default function KYC() {
 
               {/* File Uploads */}
               <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">Identity Verification (Optional)</h3>
+                <h3 className="text-lg font-semibold mb-4">Identity Verification</h3>
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="driverLicense">Driver's License Photo</Label>
@@ -394,7 +364,7 @@ export default function KYC() {
                         className="cursor-pointer"
                       />
                       <p className="text-sm text-gray-500 mt-1">
-                        Upload a clear photo of your driver's license (optional)
+                        Upload a clear photo of your driver's license
                       </p>
                     </div>
                   </div>
@@ -410,7 +380,7 @@ export default function KYC() {
                         className="cursor-pointer"
                       />
                       <p className="text-sm text-gray-500 mt-1">
-                        Upload a short video of yourself holding your ID (optional)
+                        Upload a short video of yourself holding your ID
                       </p>
                     </div>
                   </div>

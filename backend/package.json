@@ -1,7 +1,7 @@
 {
   "name": "union-clubgg-backend",
   "version": "1.0.0",
-  "description": "Backend API for Union.clubgg Automation Dashboard",
+  "description": "KYC Verification System - Email and Telegram Notifications",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
@@ -43,11 +43,11 @@
     "node": ">=18.0.0"
   },
   "keywords": [
-    "poker",
-    "settlement",
-    "dashboard",
-    "api",
-    "mysql"
+    "kyc",
+    "verification",
+    "email",
+    "telegram",
+    "notifications"
   ],
   "author": "Union.clubgg",
   "license": "MIT"
