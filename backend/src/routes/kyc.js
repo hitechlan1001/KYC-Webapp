@@ -127,7 +127,7 @@ router.post('/submit', upload.fields([
     };
 
     // Analyze security (VPN detection, location mismatch)
-    const securityAnalysis = analyzeSecurity(kycData);
+    const securityAnalysis = await analyzeSecurity(kycData);
     kycData.vpnDetected = securityAnalysis.vpnDetected;
     kycData.locationMismatch = securityAnalysis.locationMismatch;
 

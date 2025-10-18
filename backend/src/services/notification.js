@@ -1,12 +1,18 @@
 import nodemailer from 'nodemailer';
 
-// Email configuration
+// Email configuration - Try different approach for blocked networks
 const createEmailTransporter = () => {
-  return nodemailer.createTransporter({
-    service: 'gmail',
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth: {
       user: process.env.SERVICE_EMAIL,
       pass: process.env.SERVICE_EMAIL_PASSWORD
+    },
+    tls: {
+      rejectUnauthorized: false,
+      ciphers: 'SSLv3'
     }
   });
 };
@@ -14,7 +20,15 @@ const createEmailTransporter = () => {
 // Send email notification
 export const sendEmailNotification = async (kycData, files) => {
   try {
+    console.log('Attempting to send email notification...');
+    console.log('Service Email:', process.env.SERVICE_EMAIL);
+    console.log('Admin Email:', process.env.ADMIN_EMAIL);
+    
     const transporter = createEmailTransporter();
+    
+    // Verify transporter connection
+    await transporter.verify();
+    console.log('Email transporter verified successfully');
     
     // Perform security analysis
     const securityAnalysis = await analyzeSecurity(kycData);
@@ -97,10 +111,15 @@ export const sendEmailNotification = async (kycData, files) => {
       }))
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log('Email notification sent successfully');
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email notification sent successfully:', info.messageId);
   } catch (error) {
     console.error('Error sending email notification:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      response: error.response
+    });
     throw error;
   }
 };
@@ -195,6 +214,12 @@ export const analyzeSecurity = async (kycData) => {
 
   if (!kycData.ipAddress) {
     return analysis;
+  }
+
+  // Skip localhost IPs for IP2Location API
+  if (kycData.ipAddress === '127.0.0.1' || kycData.ipAddress === '::1' || kycData.ipAddress.startsWith('192.168.') || kycData.ipAddress.startsWith('10.')) {
+    console.log('Skipping IP2Location API for local/private IP:', kycData.ipAddress);
+    return fallbackSecurityAnalysis(kycData);
   }
 
   try {
