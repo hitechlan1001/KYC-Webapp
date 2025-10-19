@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { del } from '@vercel/blob';
+// import { del } from '@vercel/blob'; // Temporarily disabled for deployment
 import fs from 'fs';
 
 // Email configuration - Try different approach for blocked networks
@@ -26,10 +26,9 @@ const cleanupFiles = async (files) => {
   for (const file of files) {
     try {
       if (file.url) {
-        // Delete from Vercel Blob
-        console.log('Deleting blob file:', file.url);
-        await del(file.url);
-        console.log('Blob file deleted successfully');
+        // Mock blob deletion for now - TODO: Implement actual Vercel Blob cleanup
+        console.log('Mock deleting blob file:', file.url);
+        console.log('Blob file deletion mocked (Vercel Blob integration pending)');
       } else if (file.path) {
         // Delete local file
         console.log('Deleting local file:', file.path);
