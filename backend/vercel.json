@@ -5,7 +5,12 @@
   ],
   "routes": [
     { "src": "/(.*)", "dest": "src/serverless.js" }
-  ]
+  ],
+  "functions": {
+    "src/serverless.js": {
+      "maxDuration": 30
+    }
+  }
 }
 
 

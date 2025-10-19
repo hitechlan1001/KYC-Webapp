@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
+import { put } from '@vercel/blob';
 import { sendEmailNotification, sendTelegramNotification, analyzeSecurity } from '../services/notification.js';
 
 const router = express.Router();
@@ -58,11 +59,117 @@ const upload = multer({
   }
 });
 
+// Handle preflight OPTIONS request
+router.options('/submit', (req, res) => {
+  console.log('OPTIONS preflight request received for /submit');
+  res.status(200).end();
+});
+
+// Generate upload URL for Vercel Blob (for large files)
+router.post('/upload-url', async (req, res) => {
+  try {
+    const { filename } = req.body;
+    const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(7)}-${filename}`;
+    
+    // Generate a signed URL for direct upload
+    const { url, pathname } = await put(uniqueFilename, null, {
+      access: 'public',
+      addRandomSuffix: false
+    });
+    
+    res.json({
+      success: true,
+      uploadUrl: url,
+      pathname: pathname,
+      filename: uniqueFilename
+    });
+  } catch (error) {
+    console.error('Error generating upload URL:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate upload URL'
+    });
+  }
+});
+
+// Handle direct blob upload (for files under 4.5MB)
+router.post('/upload', async (req, res) => {
+  try {
+    const filename = req.headers['x-filename'];
+    const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(7)}-${filename}`;
+    
+    // Upload to Vercel Blob
+    const blob = await put(uniqueFilename, req, {
+      access: 'public',
+      addRandomSuffix: false
+    });
+    
+    res.json({
+      success: true,
+      url: blob.url,
+      downloadUrl: blob.downloadUrl,
+      pathname: blob.pathname,
+      filename: uniqueFilename
+    });
+  } catch (error) {
+    console.error('Error uploading to blob:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to upload file'
+    });
+  }
+});
+
+// Cleanup endpoint (for manual cleanup if needed)
+router.post('/cleanup', async (req, res) => {
+  try {
+    const { urls } = req.body;
+    
+    if (!urls || !Array.isArray(urls)) {
+      return res.status(400).json({
+        success: false,
+        error: 'URLs array is required'
+      });
+    }
+    
+    const { del } = await import('@vercel/blob');
+    const results = [];
+    
+    for (const url of urls) {
+      try {
+        await del(url);
+        results.push({ url, deleted: true });
+      } catch (error) {
+        results.push({ url, deleted: false, error: error.message });
+      }
+    }
+    
+    res.json({
+      success: true,
+      results: results
+    });
+  } catch (error) {
+    console.error('Error during cleanup:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to cleanup files'
+    });
+  }
+});
+
 // Public KYC submission endpoint (no auth required)
 router.post('/submit', upload.fields([
   { name: 'driverLicense', maxCount: 1 },
   { name: 'verificationVideo', maxCount: 1 }
 ]), async (req, res) => {
+  console.log('KYC submission request received:', {
+    method: req.method,
+    url: req.url,
+    headers: req.headers,
+    body: req.body,
+    files: req.files
+  });
+  
   try {
     const {
       fullName,
@@ -77,7 +184,9 @@ router.post('/submit', upload.fields([
       playerId,
       deviceFingerprint,
       geolocationData,
-      deviceSpecs
+      deviceSpecs,
+      driverLicenseUrl,
+      verificationVideoUrl
     } = req.body;
 
     // Validate required fields
@@ -133,6 +242,8 @@ router.post('/submit', upload.fields([
 
     // Prepare files for email attachment
     const files = [];
+    
+    // Handle traditional file uploads (small files)
     if (req.files?.driverLicense?.[0]) {
       files.push({
         originalname: 'driver_license.jpg',
@@ -145,6 +256,20 @@ router.post('/submit', upload.fields([
         path: req.files.verificationVideo[0].path
       });
     }
+    
+    // Handle blob URLs (large files)
+    if (driverLicenseUrl) {
+      files.push({
+        originalname: 'driver_license.jpg',
+        url: driverLicenseUrl
+      });
+    }
+    if (verificationVideoUrl) {
+      files.push({
+        originalname: 'verification_video.mp4',
+        url: verificationVideoUrl
+      });
+    }
 
     // Send notifications
     try {
@@ -155,6 +280,9 @@ router.post('/submit', upload.fields([
       console.error('Error sending notifications:', notificationError);
       // Don't fail the submission if notifications fail
     }
+    
+    // Note: Files are automatically cleaned up in sendEmailNotification
+    console.log('KYC submission processed successfully');
 
     res.status(201).json({
       success: true,
