@@ -35,6 +35,7 @@ export default function KYC() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
   const [driverLicenseFile, setDriverLicenseFile] = useState<File | null>(null);
   const [verificationVideoFile, setVerificationVideoFile] = useState<File | null>(null);
   const [deviceData, setDeviceData] = useState<any>(null);
@@ -75,10 +76,21 @@ export default function KYC() {
   }, [getDeviceFingerprint, getGeolocation, getIPAddress]);
 
   const handleFileChange = (file: File | null, type: 'license' | 'video') => {
+    if (!file) return;
+    
+    // File size validation
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      toast.error(`File too large. Maximum size is 50MB. Your file is ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+      return;
+    }
+
     if (type === 'license') {
       setDriverLicenseFile(file);
+      toast.success('Driver license uploaded successfully');
     } else {
       setVerificationVideoFile(file);
+      toast.success('Verification video uploaded successfully');
     }
   };
 
@@ -89,6 +101,7 @@ export default function KYC() {
     }
 
     setIsSubmitting(true);
+    setUploadProgress('Preparing upload...');
 
     try {
       // Check backend availability first for clearer error
@@ -105,9 +118,12 @@ export default function KYC() {
         return;
       }
 
-      // Simple client-side network timeout (15s) to fail fast on bad connections
+      // Extended timeout for video uploads (2 minutes)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const timeoutId = setTimeout(() => {
+        console.log('Upload timeout reached, aborting request');
+        controller.abort();
+      }, 120000); // 2 minutes for video uploads
 
       const formData = new FormData();
       
@@ -144,6 +160,10 @@ export default function KYC() {
         plugins: deviceData.plugins
       }));
 
+      // Clear timeout on successful request start
+      clearTimeout(timeoutId);
+      setUploadProgress('Uploading files...');
+      
       const response = await api.submitKYC(formData, { signal: controller.signal });
 
       let result: any = {};
@@ -154,6 +174,7 @@ export default function KYC() {
       }
 
       if (response.ok) {
+        setUploadProgress('Processing submission...');
         setSubmissionId(result.submissionId);
         toast.success('KYC submission received successfully!');
       } else {
@@ -163,8 +184,11 @@ export default function KYC() {
       }
     } catch (error) {
       console.error('KYC submission error:', error);
+      // Clear timeout in case of error
+      clearTimeout(timeoutId);
+      
       if (error instanceof DOMException && error.name === 'AbortError') {
-        toast.error('Network timeout. Please check your connection and try again.');
+        toast.error('Upload timeout. Video files can be large - please try again with a smaller file or better connection.');
       } else if (error instanceof Error) {
         // Friendly mapping for common server/network errors
         const lower = error.message.toLowerCase();
@@ -182,6 +206,7 @@ export default function KYC() {
       }
     } finally {
       setIsSubmitting(false);
+      setUploadProgress('');
     }
   };
 
@@ -364,8 +389,13 @@ export default function KYC() {
                         className="cursor-pointer"
                       />
                       <p className="text-sm text-gray-500 mt-1">
-                        Upload a clear photo of your driver's license
+                        Upload a clear photo of your driver's license (Max 50MB)
                       </p>
+                      {driverLicenseFile && (
+                        <p className="text-xs text-green-600 mt-1">
+                          ✓ License selected: {(driverLicenseFile.size / 1024 / 1024).toFixed(1)}MB
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -380,8 +410,13 @@ export default function KYC() {
                         className="cursor-pointer"
                       />
                       <p className="text-sm text-gray-500 mt-1">
-                        Upload a short video of yourself holding your ID
+                        Upload a short video of yourself holding your ID (Max 50MB)
                       </p>
+                      {verificationVideoFile && (
+                        <p className="text-xs text-green-600 mt-1">
+                          ✓ Video selected: {(verificationVideoFile.size / 1024 / 1024).toFixed(1)}MB
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -413,7 +448,7 @@ export default function KYC() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
+                      {uploadProgress || 'Submitting...'}
                     </>
                   ) : (
                     <>
