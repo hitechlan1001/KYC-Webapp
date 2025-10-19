@@ -13,6 +13,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust proxy for Vercel deployment (fixes rate limiting with X-Forwarded-For)
+app.set('trust proxy', 1);
+
 app.use(
   helmet({
     contentSecurityPolicy: {
