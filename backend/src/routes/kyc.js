@@ -17,6 +17,15 @@ router.get('/health', (req, res) => {
   });
 });
 
+// Test endpoint for upload-url
+router.get('/upload-url', (req, res) => {
+  res.json({ 
+    message: 'Upload URL endpoint is working',
+    method: 'GET',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Configure multer for file uploads (use /tmp on serverless)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -65,10 +74,37 @@ router.options('/submit', (req, res) => {
   res.status(200).end();
 });
 
+// Handle preflight OPTIONS request for upload-url
+router.options('/upload-url', (req, res) => {
+  console.log('OPTIONS preflight request received for /upload-url');
+  res.status(200).end();
+});
+
+// Handle preflight OPTIONS request for upload
+router.options('/upload', (req, res) => {
+  console.log('OPTIONS preflight request received for /upload');
+  res.status(200).end();
+});
+
 // Generate upload URL for Vercel Blob (for large files)
 router.post('/upload-url', async (req, res) => {
+  console.log('Upload URL request received:', {
+    method: req.method,
+    url: req.url,
+    body: req.body,
+    headers: req.headers
+  });
+  
   try {
     const { filename } = req.body;
+    
+    if (!filename) {
+      return res.status(400).json({
+        success: false,
+        error: 'Filename is required'
+      });
+    }
+    
     const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(7)}-${filename}`;
     
     // Generate a signed URL for direct upload
@@ -76,6 +112,8 @@ router.post('/upload-url', async (req, res) => {
       access: 'public',
       addRandomSuffix: false
     });
+    
+    console.log('Upload URL generated successfully:', { url, pathname, filename: uniqueFilename });
     
     res.json({
       success: true,

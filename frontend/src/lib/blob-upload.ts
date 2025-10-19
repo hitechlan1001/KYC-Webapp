@@ -1,8 +1,10 @@
 // Vercel Blob direct upload functionality
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8083';
+
 export const uploadToBlob = async (file: File, filename: string) => {
   try {
     // Get upload URL from backend
-    const response = await fetch('/api/kyc/upload-url', {
+    const response = await fetch(`${API_BASE_URL}/api/kyc/upload-url`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -46,7 +48,7 @@ export const uploadToBlob = async (file: File, filename: string) => {
 // Alternative: Direct upload without backend (if you have BLOB_READ_WRITE_TOKEN)
 export const uploadDirectToBlob = async (file: File, filename: string) => {
   try {
-    const response = await fetch('/api/kyc/upload', {
+    const response = await fetch(`${API_BASE_URL}/api/kyc/upload`, {
       method: 'POST',
       body: file,
       headers: {
