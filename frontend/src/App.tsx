@@ -22,6 +22,7 @@ function RequireAdmin({ children }: { children: JSX.Element }) {
   return children;
 }
 
+
 function App() {
   return (
     <Router>
