@@ -14,7 +14,6 @@ import { Loader2, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDeviceFingerprint } from '../hooks/useDeviceFingerprint';
 import { api } from '../lib/api';
-import { uploadToBlob } from '../lib/blob-upload';
 import HomeButton from '../components/HomeButton';
 
 const kycSchema = z.object({
@@ -79,10 +78,10 @@ export default function KYC() {
   const handleFileChange = (file: File | null, type: 'license' | 'video') => {
     if (!file) return;
     
-    // File size validation - Vercel Blob supports up to 500MB
-    const maxSize = 100 * 1024 * 1024; // 100MB (reasonable limit for KYC)
+    // File size validation
+    const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
-      toast.error(`File too large for upload. Maximum size is 100MB. Your file is ${(file.size / 1024 / 1024).toFixed(1)}MB. Please compress your video or use a smaller file.`);
+      toast.error(`File too large. Maximum size is 50MB. Your file is ${(file.size / 1024 / 1024).toFixed(1)}MB`);
       return;
     }
 
@@ -135,44 +134,12 @@ export default function KYC() {
         }
       });
 
-      // Upload files to Vercel Blob if they're large
-      let driverLicenseUrl = null;
-      let verificationVideoUrl = null;
-      
+      // Add files
       if (driverLicenseFile) {
-        if (driverLicenseFile.size > 4 * 1024 * 1024) { // 4MB
-          setUploadProgress('Uploading driver license...');
-          const result = await uploadToBlob(driverLicenseFile, `driver-license-${Date.now()}.jpg`);
-          if (result.success) {
-            driverLicenseUrl = result.url;
-          } else {
-            throw new Error('Failed to upload driver license');
-          }
-        } else {
-          formData.append('driverLicense', driverLicenseFile);
-        }
+        formData.append('driverLicense', driverLicenseFile);
       }
-      
       if (verificationVideoFile) {
-        if (verificationVideoFile.size > 4 * 1024 * 1024) { // 4MB
-          setUploadProgress('Uploading verification video...');
-          const result = await uploadToBlob(verificationVideoFile, `verification-video-${Date.now()}.mp4`);
-          if (result.success) {
-            verificationVideoUrl = result.url;
-          } else {
-            throw new Error('Failed to upload verification video');
-          }
-        } else {
-          formData.append('verificationVideo', verificationVideoFile);
-        }
-      }
-      
-      // Add blob URLs to form data
-      if (driverLicenseUrl) {
-        formData.append('driverLicenseUrl', driverLicenseUrl);
-      }
-      if (verificationVideoUrl) {
-        formData.append('verificationVideoUrl', verificationVideoUrl);
+        formData.append('verificationVideo', verificationVideoFile);
       }
 
       // Add device and location data
@@ -198,13 +165,7 @@ export default function KYC() {
       setUploadProgress('Uploading files...');
       
       console.log('Submitting KYC data to:', `${import.meta.env.VITE_API_URL || 'http://localhost:8083'}/api/kyc/submit`);
-      console.log('FormData contents:', {
-        fullName: data.fullName,
-        hasDriverLicense: !!driverLicenseFile,
-        hasVideo: !!verificationVideoFile,
-        driverLicenseSize: driverLicenseFile?.size,
-        videoSize: verificationVideoFile?.size
-      });
+      console.log('FormData entries:', Array.from(formData.entries()).map(([key, value]) => [key, value instanceof File ? `${value.name} (${value.size} bytes)` : value]));
       
       const response = await api.submitKYC(formData, { signal: controller.signal });
 
@@ -218,7 +179,7 @@ export default function KYC() {
       if (response.ok) {
         setUploadProgress('Processing submission...');
         setSubmissionId(result.submissionId);
-        toast.success('KYC submission received successfully! Files will be automatically deleted after email delivery.');
+        toast.success('KYC submission received successfully!');
       } else {
         // Backend provides either error or message; normalize it
         const errorMessage = result?.error || result?.message || (response.status === 400 ? 'Please complete required fields.' : 'Failed to submit KYC data');
@@ -238,8 +199,8 @@ export default function KYC() {
           toast.error('Network error. Please try again.');
         } else if (lower.includes('too many') || lower.includes('rate')) {
           toast.error('Too many requests. Please wait a moment and retry.');
-        } else if (lower.includes('file too large') || lower.includes('entity too large') || lower.includes('413') || lower.includes('payload too large')) {
-          toast.error('File too large for upload. Please compress your video or use a smaller file (max 4MB).');
+        } else if (lower.includes('file too large') || lower.includes('entity too large')) {
+          toast.error('One of the files is too large. Max size is 50MB.');
         } else {
           toast.error(error.message);
         }
@@ -431,7 +392,7 @@ export default function KYC() {
                         className="cursor-pointer"
                       />
                       <p className="text-sm text-gray-500 mt-1">
-                        Upload a clear photo of your driver's license (Max 100MB)
+                        Upload a clear photo of your driver's license (Max 50MB)
                       </p>
                       {driverLicenseFile && (
                         <p className="text-xs text-green-600 mt-1">
@@ -441,7 +402,8 @@ export default function KYC() {
                     </div>
                   </div>
 
-                  <div>
+                  {/* Video upload field - hidden for now */}
+                  <div className="hidden">
                     <Label htmlFor="verificationVideo">Verification Video</Label>
                     <div className="mt-2">
                       <Input
@@ -452,21 +414,16 @@ export default function KYC() {
                         className="cursor-pointer"
                       />
                       <p className="text-sm text-gray-500 mt-1">
-                        Upload a short video of yourself holding your ID (Max 100MB)
+                        Upload a short video of yourself holding your ID (Max 50MB)
                       </p>
                       {verificationVideoFile && (
                         <p className="text-xs text-green-600 mt-1">
                           ✓ Video selected: {(verificationVideoFile.size / 1024 / 1024).toFixed(1)}MB
                         </p>
                       )}
-                      <p className="text-xs text-amber-600 mt-1">
-                        💡 Tip: If your video is too large, try recording a shorter clip or compressing it
-                      </p>
-                      <p className="text-xs text-blue-600 mt-1">
-                        🔒 Files are automatically deleted after email delivery for security
-                      </p>
                     </div>
                   </div>
+
                 </div>
               </div>
 

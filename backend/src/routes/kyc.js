@@ -3,7 +3,6 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-// import { put } from '@vercel/blob'; // Temporarily disabled for deployment
 import { sendEmailNotification, sendTelegramNotification, analyzeSecurity } from '../services/notification.js';
 
 const router = express.Router();
@@ -13,15 +12,6 @@ router.get('/health', (req, res) => {
   res.json({
     success: true,
     message: 'KYC service is running',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Test endpoint for upload-url
-router.get('/upload-url', (req, res) => {
-  res.json({ 
-    message: 'Upload URL endpoint is working',
-    method: 'GET',
     timestamp: new Date().toISOString()
   });
 });
@@ -64,120 +54,19 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB limit
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+    fieldSize: 10 * 1024 * 1024, // 10MB for non-file fields
+    fieldNameSize: 100, // Max field name size
+    fields: 20, // Max number of fields
+    parts: 30, // Max number of parts (fields + files)
+    headerPairs: 2000 // Max number of header key=>value pairs
   }
 });
 
-// Handle preflight OPTIONS request
+// Handle preflight OPTIONS request for CORS
 router.options('/submit', (req, res) => {
-  console.log('OPTIONS preflight request received for /submit');
+  console.log('CORS preflight request received for /submit');
   res.status(200).end();
-});
-
-// Handle preflight OPTIONS request for upload-url
-router.options('/upload-url', (req, res) => {
-  console.log('OPTIONS preflight request received for /upload-url');
-  res.status(200).end();
-});
-
-// Handle preflight OPTIONS request for upload
-router.options('/upload', (req, res) => {
-  console.log('OPTIONS preflight request received for /upload');
-  res.status(200).end();
-});
-
-// Generate upload URL for Vercel Blob (for large files)
-router.post('/upload-url', async (req, res) => {
-  console.log('Upload URL request received:', {
-    method: req.method,
-    url: req.url,
-    body: req.body,
-    headers: req.headers
-  });
-  
-  try {
-    const { filename } = req.body;
-    
-    if (!filename) {
-      return res.status(400).json({
-        success: false,
-        error: 'Filename is required'
-      });
-    }
-    
-    // For now, return a mock response to test if the route works
-    // TODO: Implement actual Vercel Blob integration
-    const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(7)}-${filename}`;
-    
-    console.log('Upload URL generated successfully (mock):', { filename: uniqueFilename });
-    
-    res.json({
-      success: true,
-      uploadUrl: `https://mock-upload-url.com/${uniqueFilename}`,
-      pathname: uniqueFilename,
-      filename: uniqueFilename,
-      message: 'Mock upload URL - Vercel Blob integration pending'
-    });
-  } catch (error) {
-    console.error('Error generating upload URL:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to generate upload URL'
-    });
-  }
-});
-
-// Handle direct blob upload (for files under 4.5MB)
-router.post('/upload', async (req, res) => {
-  try {
-    const filename = req.headers['x-filename'];
-    const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(7)}-${filename}`;
-    
-    // Mock response for now - TODO: Implement actual Vercel Blob integration
-    res.json({
-      success: true,
-      url: `https://mock-blob-url.com/${uniqueFilename}`,
-      downloadUrl: `https://mock-blob-url.com/${uniqueFilename}`,
-      pathname: uniqueFilename,
-      filename: uniqueFilename,
-      message: 'Mock upload - Vercel Blob integration pending'
-    });
-  } catch (error) {
-    console.error('Error uploading to blob:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to upload file'
-    });
-  }
-});
-
-// Cleanup endpoint (for manual cleanup if needed)
-router.post('/cleanup', async (req, res) => {
-  try {
-    const { urls } = req.body;
-    
-    if (!urls || !Array.isArray(urls)) {
-      return res.status(400).json({
-        success: false,
-        error: 'URLs array is required'
-      });
-    }
-    
-    // Mock cleanup for now - TODO: Implement actual Vercel Blob cleanup
-    const results = urls.map(url => ({ url, deleted: true, message: 'Mock cleanup' }));
-    
-    res.json({
-      success: true,
-      results: results,
-      message: 'Mock cleanup - Vercel Blob integration pending'
-    });
-  } catch (error) {
-    console.error('Error during cleanup:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to cleanup files'
-    });
-  }
 });
 
 // Public KYC submission endpoint (no auth required)
@@ -185,7 +74,7 @@ router.post('/submit', upload.fields([
   { name: 'driverLicense', maxCount: 1 },
   { name: 'verificationVideo', maxCount: 1 }
 ]), async (req, res) => {
-  console.log('KYC submission request received:', {
+  console.log('KYC submission received:', {
     method: req.method,
     url: req.url,
     headers: req.headers,
@@ -207,9 +96,7 @@ router.post('/submit', upload.fields([
       playerId,
       deviceFingerprint,
       geolocationData,
-      deviceSpecs,
-      driverLicenseUrl,
-      verificationVideoUrl
+      deviceSpecs
     } = req.body;
 
     // Validate required fields
@@ -265,8 +152,6 @@ router.post('/submit', upload.fields([
 
     // Prepare files for email attachment
     const files = [];
-    
-    // Handle traditional file uploads (small files)
     if (req.files?.driverLicense?.[0]) {
       files.push({
         originalname: 'driver_license.jpg',
@@ -279,20 +164,6 @@ router.post('/submit', upload.fields([
         path: req.files.verificationVideo[0].path
       });
     }
-    
-    // Handle blob URLs (large files)
-    if (driverLicenseUrl) {
-      files.push({
-        originalname: 'driver_license.jpg',
-        url: driverLicenseUrl
-      });
-    }
-    if (verificationVideoUrl) {
-      files.push({
-        originalname: 'verification_video.mp4',
-        url: verificationVideoUrl
-      });
-    }
 
     // Send notifications
     try {
@@ -303,9 +174,6 @@ router.post('/submit', upload.fields([
       console.error('Error sending notifications:', notificationError);
       // Don't fail the submission if notifications fail
     }
-    
-    // Note: Files are automatically cleaned up in sendEmailNotification
-    console.log('KYC submission processed successfully');
 
     res.status(201).json({
       success: true,

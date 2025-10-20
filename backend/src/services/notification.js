@@ -1,6 +1,4 @@
 import nodemailer from 'nodemailer';
-// import { del } from '@vercel/blob'; // Temporarily disabled for deployment
-import fs from 'fs';
 
 // Email configuration - Try different approach for blocked networks
 const createEmailTransporter = () => {
@@ -17,33 +15,6 @@ const createEmailTransporter = () => {
       ciphers: 'SSLv3'
     }
   });
-};
-
-// Cleanup function to delete files after email sending
-const cleanupFiles = async (files) => {
-  console.log('Starting file cleanup...');
-  
-  for (const file of files) {
-    try {
-      if (file.url) {
-        // Mock blob deletion for now - TODO: Implement actual Vercel Blob cleanup
-        console.log('Mock deleting blob file:', file.url);
-        console.log('Blob file deletion mocked (Vercel Blob integration pending)');
-      } else if (file.path) {
-        // Delete local file
-        console.log('Deleting local file:', file.path);
-        if (fs.existsSync(file.path)) {
-          fs.unlinkSync(file.path);
-          console.log('Local file deleted successfully');
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting file:', file.originalname, error);
-      // Don't throw error for cleanup failures
-    }
-  }
-  
-  console.log('File cleanup completed');
 };
 
 // Send email notification
@@ -134,37 +105,14 @@ export const sendEmailNotification = async (kycData, files) => {
       to: process.env.ADMIN_EMAIL,
       subject: `New KYC Submission - ${kycData.fullName}`,
       html: htmlContent,
-      attachments: files.map(file => {
-        if (file.url) {
-          // For blob URLs, we can't attach directly, so we'll include the URL in the email
-          return null;
-        } else {
-          return {
-            filename: file.originalname,
-            path: file.path
-          };
-        }
-      }).filter(Boolean)
+      attachments: files.map(file => ({
+        filename: file.originalname,
+        path: file.path
+      }))
     };
-    
-    // Add blob URLs to email content if they exist
-    const blobFiles = files.filter(file => file.url);
-    if (blobFiles.length > 0) {
-      const blobLinksHtml = `
-        <h3>Large Files (Uploaded to Cloud Storage):</h3>
-        <ul>
-          ${blobFiles.map(file => `<li><strong>${file.originalname}:</strong> <a href="${file.url}" target="_blank">Download Link</a></li>`).join('')}
-        </ul>
-      `;
-      mailOptions.html = htmlContent + blobLinksHtml;
-    }
 
     const info = await transporter.sendMail(mailOptions);
     console.log('Email notification sent successfully:', info.messageId);
-    
-    // Clean up files after successful email sending
-    await cleanupFiles(files);
-    
   } catch (error) {
     console.error('Error sending email notification:', error);
     console.error('Error details:', {
@@ -172,14 +120,6 @@ export const sendEmailNotification = async (kycData, files) => {
       code: error.code,
       response: error.response
     });
-    
-    // Still try to cleanup files even if email failed
-    try {
-      await cleanupFiles(files);
-    } catch (cleanupError) {
-      console.error('Error during cleanup after email failure:', cleanupError);
-    }
-    
     throw error;
   }
 };
