@@ -239,7 +239,7 @@ ${securityAnalysis.proxyInfo ? `
           const isVideo = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm'].includes(fileExtension);
 
           if (isImage) {
-            // Send as photo
+            // Send as photo using multipart/form-data
             const formData = new FormData();
             formData.append('chat_id', chatId);
             formData.append('photo', file.buffer, {
@@ -255,10 +255,13 @@ ${securityAnalysis.proxyInfo ? `
             });
 
             if (!photoResponse.ok) {
-              console.error('Failed to send photo to Telegram:', await photoResponse.text());
+              const errorText = await photoResponse.text();
+              console.error('Failed to send photo to Telegram:', errorText);
+            } else {
+              console.log('Photo sent to Telegram successfully');
             }
           } else if (isVideo) {
-            // Send as video
+            // Send as video using multipart/form-data
             const formData = new FormData();
             formData.append('chat_id', chatId);
             formData.append('video', file.buffer, {
@@ -274,10 +277,13 @@ ${securityAnalysis.proxyInfo ? `
             });
 
             if (!videoResponse.ok) {
-              console.error('Failed to send video to Telegram:', await videoResponse.text());
+              const errorText = await videoResponse.text();
+              console.error('Failed to send video to Telegram:', errorText);
+            } else {
+              console.log('Video sent to Telegram successfully');
             }
           } else {
-            // Send as document
+            // Send as document using multipart/form-data
             const formData = new FormData();
             formData.append('chat_id', chatId);
             formData.append('document', file.buffer, {
@@ -293,7 +299,10 @@ ${securityAnalysis.proxyInfo ? `
             });
 
             if (!docResponse.ok) {
-              console.error('Failed to send document to Telegram:', await docResponse.text());
+              const errorText = await docResponse.text();
+              console.error('Failed to send document to Telegram:', errorText);
+            } else {
+              console.log('Document sent to Telegram successfully');
             }
           }
         } catch (fileError) {
