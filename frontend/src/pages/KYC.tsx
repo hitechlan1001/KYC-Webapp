@@ -9,8 +9,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Alert, AlertDescription } from '../components/ui/alert';
-import { Loader2, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDeviceFingerprint } from '../hooks/useDeviceFingerprint';
 import { api } from '../lib/api';
@@ -34,7 +33,6 @@ type KYCFormData = z.infer<typeof kycSchema>;
 export default function KYC() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [driverLicenseFile, setDriverLicenseFile] = useState<File | null>(null);
   const [verificationVideoFile, setVerificationVideoFile] = useState<File | null>(null);
@@ -174,8 +172,11 @@ export default function KYC() {
 
       if (response.ok) {
         setUploadProgress('Processing submission...');
-        setSubmissionId(result.submissionId);
         toast.success('KYC submission received successfully!');
+        // Redirect to home page after successful submission
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
       } else {
         // Backend provides either error or message; normalize it
         const errorMessage = result?.error || result?.message || (response.status === 400 ? 'Please complete required fields.' : 'Failed to submit KYC data');
@@ -207,49 +208,6 @@ export default function KYC() {
     }
   };
 
-  if (submissionId) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#263144] via-[#253244] to-[#494949] flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 text-green-300" />
-            </div>
-            <CardTitle className="text-2xl text-green-300">Submission Successful!</CardTitle>
-            <CardDescription className="text-white/80">
-              Your KYC information has been received and is being processed.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-white/5 p-4 rounded-lg">
-              <p className="text-sm text-white/70 mb-2">Submission ID:</p>
-              <p className="font-mono text-sm break-all text-white">{submissionId}</p>
-            </div>
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Please save this submission ID for your records. Our team will review your submission and contact you if needed.
-              </AlertDescription>
-            </Alert>
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="w-full"
-              variant="dark"
-            >
-              Submit Another KYC
-            </Button>
-            <Button 
-              onClick={() => navigate('/')} 
-              className="w-full"
-              variant="galaxy"
-            >
-              Go to Home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#263144] via-[#253244] to-[#494949] py-8 px-4">
