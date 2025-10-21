@@ -85,7 +85,7 @@ export const sendEmailNotification = async (kycData, files) => {
       
       <h3>Proxy/VPN Analysis:</h3>
       <ul>
-        <li><strong>VPN/Proxy Detected:</strong> ${securityAnalysis.vpnDetected ? '⚠️ YES' : '✅ No'}</li>
+        <li><strong>VPN/Proxy Detected:</strong> ${securityAnalysis.vpnDetected ? 'YES' : 'No'}</li>
         ${securityAnalysis.proxyInfo ? `
         <li><strong>Proxy Type:</strong> ${securityAnalysis.proxyInfo.proxyType || 'Unknown'}</li>
         <li><strong>Provider:</strong> ${securityAnalysis.proxyInfo.provider || 'Unknown'}</li>
@@ -93,14 +93,14 @@ export const sendEmailNotification = async (kycData, files) => {
         <li><strong>Is Tor:</strong> ${securityAnalysis.proxyInfo.isTor ? 'Yes' : 'No'}</li>
         <li><strong>Is Data Center:</strong> ${securityAnalysis.proxyInfo.isDataCenter ? 'Yes' : 'No'}</li>
         <li><strong>Threat Level:</strong> ${securityAnalysis.proxyInfo.threat || 'Unknown'}</li>
-        <li><strong>Is Spammer:</strong> ${securityAnalysis.proxyInfo.isSpammer ? '⚠️ YES' : 'No'}</li>
+        <li><strong>Is Spammer:</strong> ${securityAnalysis.proxyInfo.isSpammer ? 'YES' : 'No'}</li>
         ` : ''}
       </ul>
       
       <h3>Security Analysis:</h3>
       <ul>
-        <li><strong>Fraud Score:</strong> ${securityAnalysis.fraudScore}/100 ${securityAnalysis.fraudRisk === 'high' ? '🔴 HIGH RISK' : securityAnalysis.fraudRisk === 'medium' ? '🟡 MEDIUM RISK' : '🟢 LOW RISK'}</li>
-        <li><strong>Location Mismatch:</strong> ${securityAnalysis.locationMismatch ? '⚠️ Location mismatch detected' : '✅ Location consistent'}</li>
+        <li><strong>Fraud Score:</strong> ${securityAnalysis.fraudScore}/100 ${securityAnalysis.fraudRisk === 'high' ? 'HIGH RISK' : securityAnalysis.fraudRisk === 'medium' ? 'MEDIUM RISK' : 'LOW RISK'}</li>
+        <li><strong>Location Mismatch:</strong> ${securityAnalysis.locationMismatch ? 'Location mismatch detected' : 'Location consistent'}</li>
         <li><strong>Analysis Confidence:</strong> ${securityAnalysis.confidence}</li>
         <li><strong>Device Fingerprint:</strong> ${kycData.deviceData?.deviceFingerprint || 'Not available'}</li>
       </ul>
@@ -149,55 +149,65 @@ export const sendTelegramNotification = async (kycData) => {
     const message = `
 🚨 *New KYC Submission*
 
-👤 *Personal Info:*
+👤 *Personal Information:*
 • Name: ${kycData.fullName}
 • Email: ${kycData.email || 'Not provided'}
 • Phone: ${kycData.phone || 'Not provided'}
-• User Location: ${kycData.geolocation ? `${kycData.geolocation.city}, ${kycData.geolocation.country}` : 'Not available'}
+• Address: ${kycData.address || 'Not provided'}
+• City: ${kycData.city || 'Not provided'}
+• State: ${kycData.state || 'Not provided'}
+• Country: ${kycData.country || 'Not provided'}
+• Postal Code: ${kycData.postalCode || 'Not provided'}
 
-🎮 *Player Info:*
+🎮 *Player Information:*
 • Player ID: ${kycData.playerId || 'Not provided'}
 
+💻 *Device Information:*
+• IP Address: ${kycData.ipAddress || 'Not available'}
+• Browser Location: ${kycData.geolocation ? `${kycData.geolocation.city}, ${kycData.geolocation.country}` : 'Not available'}
+• Browser: ${kycData.deviceData?.browserInfo?.name || 'Not available'} ${kycData.deviceData?.browserInfo?.version ? `(${kycData.deviceData.browserInfo.version})` : ''}
+• Platform: ${kycData.deviceData?.platform || 'Not available'}
+• Screen Resolution: ${kycData.deviceData?.screenResolution || 'Not available'}
+• Device ID: ${kycData.deviceData?.deviceId || 'Not available'}
+• Timezone: ${kycData.deviceData?.timezone || 'Not available'}
+• Language: ${kycData.deviceData?.language || 'Not available'}
+• User Agent: ${kycData.deviceData?.userAgent || 'Not available'}
+• WebGL Fingerprint: ${kycData.deviceData?.webglFingerprint ? 'Available' : 'Not available'}
+• Canvas Fingerprint: ${kycData.deviceData?.canvasFingerprint ? 'Available' : 'Not available'}
+• Audio Fingerprint: ${kycData.deviceData?.audioFingerprint ? 'Available' : 'Not available'}
+• Installed Fonts: ${kycData.deviceData?.fonts?.length || 0} fonts detected
+• Browser Plugins: ${kycData.deviceData?.plugins?.length || 0} plugins detected
+
 🌍 *Real Location (IP2Location):*
-• Country: ${securityAnalysis.realLocation?.country || 'Not available'}
-• City: ${securityAnalysis.realLocation?.city || 'Not available'}
-• Region: ${securityAnalysis.realLocation?.region || 'Not available'}
+• Real Country: ${securityAnalysis.realLocation?.country || 'Not available'}
+• Real City: ${securityAnalysis.realLocation?.city || 'Not available'}
+• Real Region: ${securityAnalysis.realLocation?.region || 'Not available'}
 • ISP: ${securityAnalysis.realLocation?.isp || 'Not available'}
 • Organization: ${securityAnalysis.realLocation?.organization || 'Not available'}
+• Domain: ${securityAnalysis.realLocation?.domain || 'Not available'}
 • Usage Type: ${securityAnalysis.realLocation?.usageType || 'Not available'}
+• Timezone: ${securityAnalysis.realLocation?.timezone || 'Not available'}
+• Coordinates: ${securityAnalysis.realLocation?.latitude}, ${securityAnalysis.realLocation?.longitude}
 
 🔍 *Proxy/VPN Analysis:*
-• VPN/Proxy: ${securityAnalysis.vpnDetected ? '⚠️ DETECTED' : '✅ Clean'}
+• VPN/Proxy Detected: ${securityAnalysis.vpnDetected ? '⚠️ YES' : '✅ No'}
 ${securityAnalysis.proxyInfo ? `
-• Type: ${securityAnalysis.proxyInfo.proxyType || 'Unknown'}
+• Proxy Type: ${securityAnalysis.proxyInfo.proxyType || 'Unknown'}
 • Provider: ${securityAnalysis.proxyInfo.provider || 'Unknown'}
-• VPN: ${securityAnalysis.proxyInfo.isVpn ? 'Yes' : 'No'}
-• Tor: ${securityAnalysis.proxyInfo.isTor ? 'Yes' : 'No'}
-• Data Center: ${securityAnalysis.proxyInfo.isDataCenter ? 'Yes' : 'No'}
-• Threat: ${securityAnalysis.proxyInfo.threat || 'Unknown'}
-• Spammer: ${securityAnalysis.proxyInfo.isSpammer ? '⚠️ YES' : 'No'}
+• Is VPN: ${securityAnalysis.proxyInfo.isVpn ? 'Yes' : 'No'}
+• Is Tor: ${securityAnalysis.proxyInfo.isTor ? 'Yes' : 'No'}
+• Is Data Center: ${securityAnalysis.proxyInfo.isDataCenter ? 'Yes' : 'No'}
+• Threat Level: ${securityAnalysis.proxyInfo.threat || 'Unknown'}
+• Is Spammer: ${securityAnalysis.proxyInfo.isSpammer ? '⚠️ YES' : 'No'}
 ` : ''}
 
-💻 *Device Information:*
-• IP: ${kycData.ipAddress || 'Not available'}
-• Browser: ${kycData.deviceData?.browserInfo?.name || 'Unknown'} ${kycData.deviceData?.browserInfo?.version ? `(${kycData.deviceData.browserInfo.version})` : ''}
-• Platform: ${kycData.deviceData?.platform || 'Unknown'}
-• Screen: ${kycData.deviceData?.screenResolution || 'Unknown'}
-• Device ID: ${kycData.deviceData?.deviceId || 'Unknown'}
-• Timezone: ${kycData.deviceData?.timezone || 'Unknown'}
-• Language: ${kycData.deviceData?.language || 'Unknown'}
-• WebGL: ${kycData.deviceData?.webglFingerprint ? 'Available' : 'Not available'}
-• Canvas: ${kycData.deviceData?.canvasFingerprint ? 'Available' : 'Not available'}
-• Audio: ${kycData.deviceData?.audioFingerprint ? 'Available' : 'Not available'}
-• Fonts: ${kycData.deviceData?.fonts?.length || 0} detected
-• Plugins: ${kycData.deviceData?.plugins?.length || 0} detected
-
 🛡️ *Security Analysis:*
-• Fraud Score: ${securityAnalysis.fraudScore}/100 ${securityAnalysis.fraudRisk === 'high' ? '🔴 HIGH' : securityAnalysis.fraudRisk === 'medium' ? '🟡 MEDIUM' : '🟢 LOW'}
-• Location Match: ${securityAnalysis.locationMismatch ? '⚠️ MISMATCH' : '✅ Consistent'}
-• Confidence: ${securityAnalysis.confidence}
+• Fraud Score: ${securityAnalysis.fraudScore}/100 ${securityAnalysis.fraudRisk === 'high' ? '🔴 HIGH RISK' : securityAnalysis.fraudRisk === 'medium' ? '🟡 MEDIUM RISK' : '🟢 LOW RISK'}
+• Location Mismatch: ${securityAnalysis.locationMismatch ? '⚠️ Location mismatch detected' : '✅ Location consistent'}
+• Analysis Confidence: ${securityAnalysis.confidence}
+• Device Fingerprint: ${kycData.deviceData?.deviceFingerprint || 'Not available'}
 
-⏰ *Submitted:* ${new Date().toLocaleString()}
+⏰ *Submission Time:* ${new Date().toLocaleString()}
     `;
 
     const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
