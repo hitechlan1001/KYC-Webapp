@@ -427,64 +427,59 @@ export default function KYC() {
                 </div>
               </div>
 
-              {/* Device Information Display */}
-              {deviceData && (
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold mb-4">Device Information</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-3 text-black/80 text-sm">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p><strong>IP Address:</strong> {ipAddress || 'Collecting...'}</p>
-                        <p><strong>Browser Location:</strong> {geolocation ? `${geolocation.city}, ${geolocation.country}` : 'Not available'}</p>
-                        <p><strong>Browser:</strong> {deviceData.browserInfo?.name} {deviceData.browserInfo?.version}</p>
-                        <p><strong>Platform:</strong> {deviceData.platform}</p>
-                        <p><strong>Screen Resolution:</strong> {deviceData.screenResolution}</p>
-                        <p><strong>Device ID:</strong> {deviceData.deviceId}</p>
-                      </div>
-                      <div>
-                        <p><strong>Timezone:</strong> {deviceData.timezone}</p>
-                        <p><strong>Language:</strong> {deviceData.language}</p>
-                        <p><strong>User Agent:</strong> <span className="text-xs break-all">{deviceData.userAgent}</span></p>
-                        <p><strong>WebGL:</strong> {deviceData.webglFingerprint ? 'Available' : 'Not available'}</p>
-                        <p><strong>Canvas:</strong> {deviceData.canvasFingerprint ? 'Available' : 'Not available'}</p>
-                        <p><strong>Audio:</strong> {deviceData.audioFingerprint ? 'Available' : 'Not available'}</p>
-                      </div>
+              {/* Security Notice */}
+              <div className="border-t pt-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
                     </div>
-                    <div className="mt-4">
-                      <p><strong>Installed Fonts:</strong> {deviceData.fonts?.length || 0} fonts detected</p>
-                      <p><strong>Browser Plugins:</strong> {deviceData.plugins?.length || 0} plugins detected</p>
+                    <div>
+                      <h3 className="text-sm font-medium text-blue-800">Security & Verification</h3>
+                      <p className="text-sm text-blue-700 mt-1">
+                        Your information is being securely processed with advanced fraud detection and identity verification systems. 
+                        This helps us protect your account and ensure a safe gaming environment.
+                      </p>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    This comprehensive device fingerprinting helps us verify your identity and prevent fraud.
-                  </p>
                 </div>
-              )}
+              </div>
 
               {/* Submit Button */}
               <div className="border-t pt-6">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || !deviceData}
-                  className="w-full"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {uploadProgress || 'Submitting...'}
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Submit KYC Information
-                    </>
+                <div className="space-y-4">
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || !deviceData}
+                    className="w-full h-12 text-base font-medium"
+                    size="lg"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        {uploadProgress || 'Processing Your Submission...'}
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-5 w-5" />
+                        Submit KYC Information
+                      </>
+                    )}
+                  </Button>
+                  
+                  {!deviceData && (
+                    <div className="flex items-center justify-center space-x-2 text-amber-600">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <p className="text-sm">Initializing security verification...</p>
+                    </div>
                   )}
-                </Button>
-                {!deviceData && (
-                  <p className="text-sm text-amber-600 mt-2 text-center">
-                    Collecting device information... Please wait.
+                  
+                  <p className="text-xs text-gray-500 text-center">
+                    By submitting this form, you agree to our verification process and confirm that all information provided is accurate.
                   </p>
-                )}
+                </div>
               </div>
             </form>
           </CardContent>
