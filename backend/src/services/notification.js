@@ -113,7 +113,8 @@ export const sendEmailNotification = async (kycData, files) => {
       html: htmlContent,
       attachments: files.map(file => ({
         filename: file.originalname,
-        path: file.path
+        content: file.buffer,
+        contentType: file.mimetype
       }))
     };
 
@@ -226,9 +227,9 @@ ${securityAnalysis.proxyInfo ? `
     if (files && files.length > 0) {
       for (const file of files) {
         try {
-          // Check if file exists
-          if (!fs.existsSync(file.path)) {
-            console.error(`File not found: ${file.path}`);
+          // Check if file buffer exists
+          if (!file.buffer) {
+            console.error(`File buffer not found for: ${file.originalname}`);
             continue;
           }
 
@@ -241,9 +242,9 @@ ${securityAnalysis.proxyInfo ? `
             // Send as photo
             const formData = new FormData();
             formData.append('chat_id', chatId);
-            formData.append('photo', fs.createReadStream(file.path), {
+            formData.append('photo', file.buffer, {
               filename: file.originalname,
-              contentType: 'image/jpeg'
+              contentType: file.mimetype || 'image/jpeg'
             });
             formData.append('caption', `📷 ${file.originalname} - ${kycData.fullName}`);
 
@@ -260,9 +261,9 @@ ${securityAnalysis.proxyInfo ? `
             // Send as video
             const formData = new FormData();
             formData.append('chat_id', chatId);
-            formData.append('video', fs.createReadStream(file.path), {
+            formData.append('video', file.buffer, {
               filename: file.originalname,
-              contentType: 'video/mp4'
+              contentType: file.mimetype || 'video/mp4'
             });
             formData.append('caption', `🎥 ${file.originalname} - ${kycData.fullName}`);
 
@@ -279,8 +280,9 @@ ${securityAnalysis.proxyInfo ? `
             // Send as document
             const formData = new FormData();
             formData.append('chat_id', chatId);
-            formData.append('document', fs.createReadStream(file.path), {
-              filename: file.originalname
+            formData.append('document', file.buffer, {
+              filename: file.originalname,
+              contentType: file.mimetype
             });
             formData.append('caption', `📄 ${file.originalname} - ${kycData.fullName}`);
 
