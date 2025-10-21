@@ -1,14 +1,16 @@
-# Union.clubgg Backend API
+# Union.clubgg KYC Backend API
 
-A Node.js backend API for the Union.clubgg poker management system, providing authentication, data management, and role-based access control.
+A Node.js backend API for the Union.clubgg KYC verification system, providing secure identity verification with email and Telegram notifications.
 
 ## 🚀 Features
 
-- **JWT Authentication** - Secure user authentication with JWT tokens
-- **Role-Based Access Control** - Admin, Union Head, Regional Head, Club Owner, and more
-- **MySQL Integration** - Connects to external MySQL database
-- **RESTful API** - Clean API endpoints for all operations
-- **Data Filtering** - Role-based data filtering and permissions
+- **KYC Form Processing** - Secure submission of identity verification documents
+- **Device Fingerprinting** - Advanced device identification and fraud detection
+- **Email Notifications** - Comprehensive email alerts with all submission details
+- **Telegram Notifications** - Real-time Telegram bot notifications
+- **Security Analysis** - VPN/Proxy detection and location verification
+- **File Upload Support** - Secure handling of driver's license and verification videos
+- **IP2Location Integration** - Real location detection and fraud analysis
 - **CORS Support** - Cross-origin resource sharing for frontend
 - **Rate Limiting** - API rate limiting for security
 - **Error Handling** - Comprehensive error handling and logging
@@ -17,7 +19,6 @@ A Node.js backend API for the Union.clubgg poker management system, providing au
 
 - **Node.js** (v18 or higher)
 - **npm** (v8 or higher)
-- **MySQL Database** (external database access)
 - **Environment Variables** (see Configuration section)
 
 ## 🛠️ Installation
@@ -52,115 +53,114 @@ Create a `.env` file in the backend directory with the following variables:
 
 ```bash
 # Server Configuration
-PORT=8081
+PORT=8083
 NODE_ENV=development
 
-# JWT Configuration
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
-JWT_EXPIRES_IN=24h
+# Email Configuration
+SERVICE_EMAIL=your-email@gmail.com
+SERVICE_EMAIL_PASSWORD=your-app-password
+ADMIN_EMAIL=admin@yourdomain.com
 
-# Database Configuration
-EXTERNAL_DB_HOST=your-database-host
-EXTERNAL_DB_PORT=3306
-EXTERNAL_DB_USER=your-database-username
-EXTERNAL_DB_PASSWORD=your-database-password
-EXTERNAL_DB_NAME=your-database-name
+# Telegram Configuration
+TELEGRAM_BOT_TOKEN=your-bot-token
+TELEGRAM_CHAT_ID=your-chat-id
 
-# CORS Configuration
-CORS_ORIGIN=http://localhost:8080
+# IP2Location API (Optional)
+IP2LOCATION_API_KEY=your-api-key
 
-# Rate Limiting
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
+# File Upload Configuration
+UPLOAD_DIR=/tmp
 ```
 
 ### Required Environment Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `PORT` | Server port | `8081` |
-| `JWT_SECRET` | JWT signing secret | `your-secret-key` |
-| `EXTERNAL_DB_HOST` | Database host | `172.233.47.88` |
-| `EXTERNAL_DB_USER` | Database username | `gg_uni_ro` |
-| `EXTERNAL_DB_PASSWORD` | Database password | `your-password` |
+| `SERVICE_EMAIL` | Gmail address for sending notifications | `kyc@yourdomain.com` |
+| `SERVICE_EMAIL_PASSWORD` | Gmail app password | `your-app-password` |
+| `ADMIN_EMAIL` | Admin email to receive notifications | `admin@yourdomain.com` |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token | `123456789:ABCdefGHIjklMNOpqrsTUVwxyz` |
+| `TELEGRAM_CHAT_ID` | Telegram chat ID | `-1001234567890` |
 
 ## 🚀 Running the Application
 
 ### Development Mode
 ```bash
-npm start
+npm run dev
 ```
 
 ### Production Mode
 ```bash
-NODE_ENV=production npm start
+npm start
 ```
 
-The server will start on `http://localhost:8081` (or your configured PORT).
+The server will start on `http://localhost:8083` (or your configured PORT).
 
 ## 📚 API Endpoints
 
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/verify` - Verify JWT token
-
-### Data Management
-- `GET /api/dashboard/overview` - Dashboard overview data
-- `GET /api/dashboard/week-ranges` - Week range data
-- `GET /api/dashboard/club-settlements` - Club settlement data
-- `GET /api/players/GG_Member` - Player metrics data
-- `GET /api/deals/*` - Deal management data
-- `GET /api/users` - User management data
+### KYC Submission
+- `POST /api/kyc/submit` - Submit KYC information and documents
 
 ### Health Check
-- `GET /api/health` - Server health status
+- `GET /api/kyc/health` - Server health status
+- `GET /health` - General health check
 
-## 🔐 Authentication
+## 🔐 Security Features
 
-The API uses JWT (JSON Web Tokens) for authentication. Include the token in the Authorization header:
-
-```bash
-Authorization: Bearer <your-jwt-token>
-```
-
-## 🛡️ Security Features
-
-- **JWT Authentication** - Secure token-based authentication
+- **Device Fingerprinting** - Unique device identification
+- **VPN/Proxy Detection** - Advanced fraud detection
+- **Location Verification** - IP-based location analysis
 - **Rate Limiting** - Prevents API abuse
 - **CORS Protection** - Cross-origin request security
+- **File Validation** - Secure file upload handling
 - **Input Validation** - Request data validation
-- **SQL Injection Protection** - Parameterized queries
 - **Error Handling** - Secure error responses
 
-## 📊 Database Schema
+## 📊 Data Collection
 
-The backend connects to an external MySQL database with the following main tables:
-- `GG Member` - Member data and statistics
-- `GG Club Settle` - Club settlement data
-- `GG Member Statistics Deals` - Deal management data
-- `uc_users` - User management data
+The system collects comprehensive data for security analysis:
+
+### Personal Information
+- Full name, email, phone
+- Address, city, state, country, postal code
+- Player ID and platform information
+
+### Device Information
+- IP address and browser location
+- Browser details (name, version, engine)
+- Platform, screen resolution, device ID
+- Timezone, language, user agent
+- WebGL, Canvas, and Audio fingerprints
+- Installed fonts and browser plugins
+
+### Security Analysis
+- Real location from IP2Location
+- VPN/Proxy detection results
+- Fraud score and risk assessment
+- Location mismatch detection
 
 ## 🚨 Troubleshooting
 
 ### Common Issues
 
-1. **Database Connection Error**
-   - Check database credentials in `.env`
-   - Verify database server is running
-   - Check network connectivity
+1. **Email Not Sending**
+   - Check Gmail app password in `.env`
+   - Verify SERVICE_EMAIL and ADMIN_EMAIL
+   - Check Gmail security settings
 
-2. **Port Already in Use**
+2. **Telegram Not Working**
+   - Verify TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID
+   - Check bot permissions
+   - Ensure bot is added to the chat
+
+3. **File Upload Issues**
+   - Check UPLOAD_DIR permissions
+   - Verify file size limits (50MB max)
+   - Check multer configuration
+
+4. **Port Already in Use**
    - Change PORT in `.env` file
-   - Kill existing process: `lsof -ti:8081 | xargs kill -9`
-
-3. **JWT Secret Error**
-   - Ensure JWT_SECRET is set in `.env`
-   - Use a strong, unique secret key
-
-4. **CORS Issues**
-   - Check CORS_ORIGIN in `.env`
-   - Ensure frontend URL matches
+   - Kill existing process: `lsof -ti:8083 | xargs kill -9`
 
 ### Logs
 
@@ -172,37 +172,40 @@ Check the console output for error messages and debugging information.
 ```
 backend/
 ├── src/
-│   ├── config/          # Database and auth configuration
-│   ├── middleware/      # Authentication and error handling
+│   ├── middleware/      # Error handling middleware
 │   ├── routes/          # API route handlers
+│   ├── services/        # Email and Telegram services
 │   ├── utils/           # Utility functions
-│   └── server.js        # Main server file
+│   ├── app.js           # Express app configuration
+│   ├── server.js        # Main server file
+│   └── serverless.js    # Vercel serverless handler
 ├── .env                 # Environment variables
 ├── .gitignore          # Git ignore rules
 ├── package.json        # Dependencies and scripts
+├── vercel.json         # Vercel deployment config
 └── README.md           # This file
 ```
 
-### Adding New Routes
+### Adding New Features
 
-1. Create route file in `src/routes/`
-2. Import and register in `src/server.js`
-3. Add authentication middleware if needed
+1. Create service files in `src/services/`
+2. Add routes in `src/routes/`
+3. Update middleware if needed
 4. Test with appropriate HTTP client
 
 ## 🔄 Maintenance
 
 ### Regular Tasks
 - Monitor server logs for errors
-- Check database connection health
+- Check email and Telegram delivery
 - Update dependencies regularly
 - Backup environment configuration
 
 ### Updates
 - Update Node.js and npm regularly
 - Keep dependencies up to date
-- Review and rotate JWT secrets
 - Monitor security advisories
+- Test notification systems
 
 ## 📞 Support
 

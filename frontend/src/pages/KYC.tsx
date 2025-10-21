@@ -234,7 +234,7 @@ export default function KYC() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Please save this submission ID for your records. You can use it to check the status of your verification.
+                Please save this submission ID for your records. Our team will review your submission and contact you if needed.
               </AlertDescription>
             </Alert>
             <Button 

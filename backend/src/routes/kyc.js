@@ -190,32 +190,5 @@ router.post('/submit', upload.fields([
   }
 });
 
-// Simple status endpoint (no database needed)
-router.get('/status/:submissionId', async (req, res) => {
-  try {
-    const { submissionId } = req.params;
-    
-    // Since we're not storing in database, just return a generic status
-    res.json({
-      success: true,
-      data: {
-        submission_id: submissionId,
-        full_name: 'Submitted',
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        verification_notes: 'Submission received and under review',
-        verified_at: null
-      }
-    });
-
-  } catch (error) {
-    console.error('Error fetching KYC status:', error);
-    res.status(500).json({
-      error: 'Failed to fetch KYC status',
-      message: error.message
-    });
-  }
-});
 
 export default router;
