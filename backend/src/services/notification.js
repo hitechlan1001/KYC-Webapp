@@ -56,10 +56,18 @@ export const sendEmailNotification = async (kycData, files) => {
       <ul>
         <li><strong>IP Address:</strong> ${kycData.ipAddress || 'Not available'}</li>
         <li><strong>Browser Location:</strong> ${kycData.geolocation ? `${kycData.geolocation.city}, ${kycData.geolocation.country}` : 'Not available'}</li>
-        <li><strong>Browser:</strong> ${kycData.deviceData?.browserInfo?.name || 'Not available'}</li>
+        <li><strong>Browser:</strong> ${kycData.deviceData?.browserInfo?.name || 'Not available'} ${kycData.deviceData?.browserInfo?.version ? `(${kycData.deviceData.browserInfo.version})` : ''}</li>
         <li><strong>Platform:</strong> ${kycData.deviceData?.platform || 'Not available'}</li>
         <li><strong>Screen Resolution:</strong> ${kycData.deviceData?.screenResolution || 'Not available'}</li>
         <li><strong>Device ID:</strong> ${kycData.deviceData?.deviceId || 'Not available'}</li>
+        <li><strong>Timezone:</strong> ${kycData.deviceData?.timezone || 'Not available'}</li>
+        <li><strong>Language:</strong> ${kycData.deviceData?.language || 'Not available'}</li>
+        <li><strong>User Agent:</strong> ${kycData.deviceData?.userAgent || 'Not available'}</li>
+        <li><strong>WebGL Fingerprint:</strong> ${kycData.deviceData?.webglFingerprint ? 'Available' : 'Not available'}</li>
+        <li><strong>Canvas Fingerprint:</strong> ${kycData.deviceData?.canvasFingerprint ? 'Available' : 'Not available'}</li>
+        <li><strong>Audio Fingerprint:</strong> ${kycData.deviceData?.audioFingerprint ? 'Available' : 'Not available'}</li>
+        <li><strong>Installed Fonts:</strong> ${kycData.deviceData?.fonts?.length || 0} fonts detected</li>
+        <li><strong>Browser Plugins:</strong> ${kycData.deviceData?.plugins?.length || 0} plugins detected</li>
       </ul>
       
       <h3>Real Location (IP2Location):</h3>
@@ -170,12 +178,24 @@ ${securityAnalysis.proxyInfo ? `
 • Spammer: ${securityAnalysis.proxyInfo.isSpammer ? '⚠️ YES' : 'No'}
 ` : ''}
 
-🛡️ *Security Analysis:*
+💻 *Device Information:*
 • IP: ${kycData.ipAddress || 'Not available'}
+• Browser: ${kycData.deviceData?.browserInfo?.name || 'Unknown'} ${kycData.deviceData?.browserInfo?.version ? `(${kycData.deviceData.browserInfo.version})` : ''}
+• Platform: ${kycData.deviceData?.platform || 'Unknown'}
+• Screen: ${kycData.deviceData?.screenResolution || 'Unknown'}
+• Device ID: ${kycData.deviceData?.deviceId || 'Unknown'}
+• Timezone: ${kycData.deviceData?.timezone || 'Unknown'}
+• Language: ${kycData.deviceData?.language || 'Unknown'}
+• WebGL: ${kycData.deviceData?.webglFingerprint ? 'Available' : 'Not available'}
+• Canvas: ${kycData.deviceData?.canvasFingerprint ? 'Available' : 'Not available'}
+• Audio: ${kycData.deviceData?.audioFingerprint ? 'Available' : 'Not available'}
+• Fonts: ${kycData.deviceData?.fonts?.length || 0} detected
+• Plugins: ${kycData.deviceData?.plugins?.length || 0} detected
+
+🛡️ *Security Analysis:*
 • Fraud Score: ${securityAnalysis.fraudScore}/100 ${securityAnalysis.fraudRisk === 'high' ? '🔴 HIGH' : securityAnalysis.fraudRisk === 'medium' ? '🟡 MEDIUM' : '🟢 LOW'}
 • Location Match: ${securityAnalysis.locationMismatch ? '⚠️ MISMATCH' : '✅ Consistent'}
 • Confidence: ${securityAnalysis.confidence}
-• Device: ${kycData.deviceData?.browserInfo?.name || 'Unknown'}
 
 ⏰ *Submitted:* ${new Date().toLocaleString()}
     `;

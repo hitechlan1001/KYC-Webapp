@@ -462,7 +462,45 @@ export default function KYCAdmin() {
                     <Label>Timezone</Label>
                     <p className="text-sm">{selectedSubmission.timezone || 'N/A'}</p>
                   </div>
+                  <div>
+                    <Label>Language</Label>
+                    <p className="text-sm">{selectedSubmission.language || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label>User Agent</Label>
+                    <p className="text-xs font-mono break-all">{selectedSubmission.user_agent || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label>WebGL Fingerprint</Label>
+                    <p className="text-sm">{selectedSubmission.webgl_fingerprint ? 'Available' : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label>Canvas Fingerprint</Label>
+                    <p className="text-sm">{selectedSubmission.canvas_fingerprint ? 'Available' : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label>Audio Fingerprint</Label>
+                    <p className="text-sm">{selectedSubmission.audio_fingerprint ? 'Available' : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label>Installed Fonts</Label>
+                    <p className="text-sm">{selectedSubmission.fonts?.length || 0} fonts detected</p>
+                  </div>
+                  <div>
+                    <Label>Browser Plugins</Label>
+                    <p className="text-sm">{selectedSubmission.plugins?.length || 0} plugins detected</p>
+                  </div>
                 </div>
+                
+                {/* Detailed Fingerprint Information */}
+                {selectedSubmission.device_fingerprint && (
+                  <div className="mt-4">
+                    <Label>Device Fingerprint (JSON)</Label>
+                    <div className="bg-gray-100 p-3 rounded text-xs font-mono max-h-40 overflow-y-auto">
+                      <pre>{JSON.stringify(JSON.parse(selectedSubmission.device_fingerprint), null, 2)}</pre>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Location Information */}

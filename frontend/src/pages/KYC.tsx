@@ -431,14 +431,32 @@ export default function KYC() {
               {deviceData && (
                 <div className="border-t pt-6">
                   <h3 className="text-lg font-semibold mb-4">Device Information</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-black/80 text-sm">
-                    <p><strong>IP Address:</strong> {ipAddress || 'Collecting...'}</p>
-                    <p><strong>Location:</strong> {geolocation ? `${geolocation.city}, ${geolocation.country}` : 'Collecting...'}</p>
-                    <p><strong>Device:</strong> {deviceData.browserInfo?.name} on {deviceData.platform}</p>
-                    <p><strong>Screen:</strong> {deviceData.screenResolution}</p>
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-3 text-black/80 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p><strong>IP Address:</strong> {ipAddress || 'Collecting...'}</p>
+                        <p><strong>Browser Location:</strong> {geolocation ? `${geolocation.city}, ${geolocation.country}` : 'Not available'}</p>
+                        <p><strong>Browser:</strong> {deviceData.browserInfo?.name} {deviceData.browserInfo?.version}</p>
+                        <p><strong>Platform:</strong> {deviceData.platform}</p>
+                        <p><strong>Screen Resolution:</strong> {deviceData.screenResolution}</p>
+                        <p><strong>Device ID:</strong> {deviceData.deviceId}</p>
+                      </div>
+                      <div>
+                        <p><strong>Timezone:</strong> {deviceData.timezone}</p>
+                        <p><strong>Language:</strong> {deviceData.language}</p>
+                        <p><strong>User Agent:</strong> <span className="text-xs break-all">{deviceData.userAgent}</span></p>
+                        <p><strong>WebGL:</strong> {deviceData.webglFingerprint ? 'Available' : 'Not available'}</p>
+                        <p><strong>Canvas:</strong> {deviceData.canvasFingerprint ? 'Available' : 'Not available'}</p>
+                        <p><strong>Audio:</strong> {deviceData.audioFingerprint ? 'Available' : 'Not available'}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <p><strong>Installed Fonts:</strong> {deviceData.fonts?.length || 0} fonts detected</p>
+                      <p><strong>Browser Plugins:</strong> {deviceData.plugins?.length || 0} plugins detected</p>
+                    </div>
                   </div>
                   <p className="text-xs text-gray-500 mt-2">
-                    This information helps us verify your identity and prevent fraud.
+                    This comprehensive device fingerprinting helps us verify your identity and prevent fraud.
                   </p>
                 </div>
               )}
