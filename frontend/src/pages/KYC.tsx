@@ -121,7 +121,6 @@ export default function KYC() {
       // Extended timeout for video uploads (2 minutes)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.log('Upload timeout reached, aborting request');
         controller.abort();
       }, 120000); // 2 minutes for video uploads
 
@@ -164,9 +163,6 @@ export default function KYC() {
       clearTimeout(timeoutId);
       setUploadProgress('Uploading files...');
       
-      console.log('Submitting KYC data to:', `${import.meta.env.VITE_API_URL || 'http://localhost:8083'}/api/kyc/submit`);
-      console.log('FormData entries:', Array.from(formData.entries()).map(([key, value]) => [key, value instanceof File ? `${value.name} (${value.size} bytes)` : value]));
-      
       const response = await api.submitKYC(formData, { signal: controller.signal });
 
       let result: any = {};
@@ -186,9 +182,7 @@ export default function KYC() {
         throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error('KYC submission error:', error);
-      // Clear timeout in case of error
-      clearTimeout(timeoutId);
+      console.error('KYC submission error:', error); 
       
       if (error instanceof DOMException && error.name === 'AbortError') {
         toast.error('Upload timeout. Video files can be large - please try again with a smaller file or better connection.');

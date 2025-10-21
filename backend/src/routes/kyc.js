@@ -65,7 +65,6 @@ const upload = multer({
 
 // Handle preflight OPTIONS request for CORS
 router.options('/submit', (req, res) => {
-  console.log('CORS preflight request received for /submit');
   res.status(200).end();
 });
 
@@ -74,13 +73,6 @@ router.post('/submit', upload.fields([
   { name: 'driverLicense', maxCount: 1 },
   { name: 'verificationVideo', maxCount: 1 }
 ]), async (req, res) => {
-  console.log('KYC submission received:', {
-    method: req.method,
-    url: req.url,
-    headers: req.headers,
-    body: req.body,
-    files: req.files
-  });
   
   try {
     const {
@@ -169,7 +161,6 @@ router.post('/submit', upload.fields([
     try {
       await sendEmailNotification(kycData, files);
       await sendTelegramNotification(kycData);
-      console.log('Notifications sent successfully');
     } catch (notificationError) {
       console.error('Error sending notifications:', notificationError);
       // Don't fail the submission if notifications fail

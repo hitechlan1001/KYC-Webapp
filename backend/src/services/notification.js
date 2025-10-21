@@ -20,15 +20,10 @@ const createEmailTransporter = () => {
 // Send email notification
 export const sendEmailNotification = async (kycData, files) => {
   try {
-    console.log('Attempting to send email notification...');
-    console.log('Service Email:', process.env.SERVICE_EMAIL);
-    console.log('Admin Email:', process.env.ADMIN_EMAIL);
-    
     const transporter = createEmailTransporter();
     
     // Verify transporter connection
     await transporter.verify();
-    console.log('Email transporter verified successfully');
     
     // Perform security analysis
     const securityAnalysis = await analyzeSecurity(kycData);
@@ -120,7 +115,6 @@ export const sendEmailNotification = async (kycData, files) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email notification sent successfully:', info.messageId);
   } catch (error) {
     console.error('Error sending email notification:', error);
     console.error('Error details:', {
@@ -139,7 +133,6 @@ export const sendTelegramNotification = async (kycData) => {
     const chatId = process.env.TELEGRAM_CHAT_ID;
     
     if (!botToken || !chatId) {
-      console.log('Telegram credentials not configured, skipping Telegram notification');
       return;
     }
 
@@ -222,9 +215,7 @@ ${securityAnalysis.proxyInfo ? `
       })
     });
 
-    if (response.ok) {
-      console.log('Telegram notification sent successfully');
-    } else {
+    if (!response.ok) {
       console.error('Failed to send Telegram notification:', await response.text());
     }
   } catch (error) {
@@ -248,7 +239,6 @@ export const analyzeSecurity = async (kycData) => {
 
   // Skip localhost IPs for IP2Location API
   if (kycData.ipAddress === '127.0.0.1' || kycData.ipAddress === '::1' || kycData.ipAddress.startsWith('192.168.') || kycData.ipAddress.startsWith('10.')) {
-    console.log('Skipping IP2Location API for local/private IP:', kycData.ipAddress);
     return fallbackSecurityAnalysis(kycData);
   }
 
@@ -333,15 +323,6 @@ export const analyzeSecurity = async (kycData) => {
       }
     }
 
-    console.log('IP2Location analysis:', {
-      ip: kycData.ipAddress,
-      vpnDetected: analysis.vpnDetected,
-      fraudScore: analysis.fraudScore,
-      fraudRisk: analysis.fraudRisk,
-      proxyInfo: analysis.proxyInfo,
-      realLocation: analysis.realLocation,
-      locationMismatch: analysis.locationMismatch
-    });
 
   } catch (error) {
     console.error('Error calling IP2Location API:', error);
