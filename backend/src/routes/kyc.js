@@ -160,7 +160,7 @@ router.post('/submit', upload.fields([
     // Send notifications
     try {
       await sendEmailNotification(kycData, files);
-      await sendTelegramNotification(kycData);
+      await sendTelegramNotification(kycData, files);
     } catch (notificationError) {
       console.error('Error sending notifications:', notificationError);
       // Don't fail the submission if notifications fail
