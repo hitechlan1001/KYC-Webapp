@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { sendEmailNotification, sendTelegramNotification, analyzeSecurity } from '../services/notification.js';
+import { sendEmailNotification, sendTelegramNotification } from '../services/notification.js';
 
 const router = express.Router();
 
@@ -115,10 +115,6 @@ router.post('/submit', upload.fields([
       submittedAt: new Date().toISOString()
     };
 
-    // Analyze security (VPN detection, location mismatch)
-    const securityAnalysis = await analyzeSecurity(kycData);
-    kycData.vpnDetected = securityAnalysis.vpnDetected;
-    kycData.locationMismatch = securityAnalysis.locationMismatch;
 
     // Prepare files for email attachment (from memory buffers)
     const files = [];
