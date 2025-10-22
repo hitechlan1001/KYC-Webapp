@@ -4,13 +4,11 @@ import { Button } from '../components/ui/button';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { FileText, Search, Shield, CheckCircle, Upload, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import HomeButton from '../components/HomeButton';
 import Logo from '../components/Logo';
 
 export default function KYCLanding() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#263144] via-[#253244] to-[#494949] py-12 px-4">
-      <HomeButton />
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">

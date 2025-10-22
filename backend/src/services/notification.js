@@ -1,5 +1,4 @@
 import nodemailer from 'nodemailer';
-import fs from 'fs';
 import path from 'path';
 import FormData from 'form-data';
 import axios from 'axios';
@@ -29,8 +28,8 @@ export const sendEmailNotification = async (kycData, files) => {
     // Verify transporter connection
     await transporter.verify();
     
-    // Perform security analysis
-    const securityAnalysis = await analyzeSecurity(kycData);
+    // Get real location data
+    const realLocationData = await getRealLocation(kycData);
     
     const htmlContent = `
       <h2>New KYC Submission</h2>
@@ -71,37 +70,15 @@ export const sendEmailNotification = async (kycData, files) => {
       
       <h3>Real Location (IP2Location):</h3>
       <ul>
-        <li><strong>Real Country:</strong> ${securityAnalysis.realLocation?.country || 'Not available'}</li>
-        <li><strong>Real City:</strong> ${securityAnalysis.realLocation?.city || 'Not available'}</li>
-        <li><strong>Real Region:</strong> ${securityAnalysis.realLocation?.region || 'Not available'}</li>
-        <li><strong>ISP:</strong> ${securityAnalysis.realLocation?.isp || 'Not available'}</li>
-        <li><strong>Organization:</strong> ${securityAnalysis.realLocation?.organization || 'Not available'}</li>
-        <li><strong>Domain:</strong> ${securityAnalysis.realLocation?.domain || 'Not available'}</li>
-        <li><strong>Usage Type:</strong> ${securityAnalysis.realLocation?.usageType || 'Not available'}</li>
-        <li><strong>Timezone:</strong> ${securityAnalysis.realLocation?.timezone || 'Not available'}</li>
-        <li><strong>Coordinates:</strong> ${securityAnalysis.realLocation?.latitude}, ${securityAnalysis.realLocation?.longitude}</li>
-      </ul>
-      
-      <h3>Proxy/VPN Analysis:</h3>
-      <ul>
-        <li><strong>VPN/Proxy Detected:</strong> ${securityAnalysis.vpnDetected ? 'YES' : 'No'}</li>
-        ${securityAnalysis.proxyInfo ? `
-        <li><strong>Proxy Type:</strong> ${securityAnalysis.proxyInfo.proxyType || 'Unknown'}</li>
-        <li><strong>Provider:</strong> ${securityAnalysis.proxyInfo.provider || 'Unknown'}</li>
-        <li><strong>Is VPN:</strong> ${securityAnalysis.proxyInfo.isVpn ? 'Yes' : 'No'}</li>
-        <li><strong>Is Tor:</strong> ${securityAnalysis.proxyInfo.isTor ? 'Yes' : 'No'}</li>
-        <li><strong>Is Data Center:</strong> ${securityAnalysis.proxyInfo.isDataCenter ? 'Yes' : 'No'}</li>
-        <li><strong>Threat Level:</strong> ${securityAnalysis.proxyInfo.threat || 'Unknown'}</li>
-        <li><strong>Is Spammer:</strong> ${securityAnalysis.proxyInfo.isSpammer ? 'YES' : 'No'}</li>
-        ` : ''}
-      </ul>
-      
-      <h3>Security Analysis:</h3>
-      <ul>
-        <li><strong>Fraud Score:</strong> ${securityAnalysis.fraudScore}/100 ${securityAnalysis.fraudRisk === 'high' ? 'HIGH RISK' : securityAnalysis.fraudRisk === 'medium' ? 'MEDIUM RISK' : 'LOW RISK'}</li>
-        <li><strong>Location Mismatch:</strong> ${securityAnalysis.locationMismatch ? 'Location mismatch detected' : 'Location consistent'}</li>
-        <li><strong>Analysis Confidence:</strong> ${securityAnalysis.confidence}</li>
-        <li><strong>Device Fingerprint:</strong> ${kycData.deviceData?.deviceFingerprint || 'Not available'}</li>
+        <li><strong>Real Country:</strong> ${realLocationData?.country || 'Not available'}</li>
+        <li><strong>Real City:</strong> ${realLocationData?.city || 'Not available'}</li>
+        <li><strong>Real Region:</strong> ${realLocationData?.region || 'Not available'}</li>
+        <li><strong>ISP:</strong> ${realLocationData?.isp || 'Not available'}</li>
+        <li><strong>Organization:</strong> ${realLocationData?.organization || 'Not available'}</li>
+        <li><strong>Domain:</strong> ${realLocationData?.domain || 'Not available'}</li>
+        <li><strong>Usage Type:</strong> ${realLocationData?.usageType || 'Not available'}</li>
+        <li><strong>Timezone:</strong> ${realLocationData?.timezone || 'Not available'}</li>
+        <li><strong>Coordinates:</strong> ${realLocationData?.latitude}, ${realLocationData?.longitude}</li>
       </ul>
       
       <p><strong>Submission Time:</strong> ${new Date().toLocaleString()}</p>
@@ -141,35 +118,41 @@ export const sendTelegramNotification = async (kycData, files = []) => {
       return;
     }
 
-    // Perform security analysis
-    const securityAnalysis = await analyzeSecurity(kycData);
+    // Get real location data
+    const realLocationData = await getRealLocation(kycData);
 
-    const message = `
-🚨 *New KYC Submission*
+    // Helper function to escape Markdown special characters
+    const escapeMarkdown = (text) => {
+      if (!text) return 'Not available';
+      // Escape only the most critical characters that break Markdown parsing
+      return String(text).replace(/[_*[\]()~`>#+=|{}.!-]/g, '\\$&');
+    };
+
+    const message = `🚨 *New KYC Submission*
 
 👤 *Personal Information:*
-• Name: ${kycData.fullName}
-• Email: ${kycData.email || 'Not provided'}
-• Phone: ${kycData.phone || 'Not provided'}
-• Address: ${kycData.address || 'Not provided'}
-• City: ${kycData.city || 'Not provided'}
-• State: ${kycData.state || 'Not provided'}
-• Country: ${kycData.country || 'Not provided'}
-• Postal Code: ${kycData.postalCode || 'Not provided'}
+• Name: ${escapeMarkdown(kycData.fullName)}
+• Email: ${escapeMarkdown(kycData.email) || 'Not provided'}
+• Phone: ${escapeMarkdown(kycData.phone) || 'Not provided'}
+• Address: ${escapeMarkdown(kycData.address) || 'Not provided'}
+• City: ${escapeMarkdown(kycData.city) || 'Not provided'}
+• State: ${escapeMarkdown(kycData.state) || 'Not provided'}
+• Country: ${escapeMarkdown(kycData.country) || 'Not provided'}
+• Postal Code: ${escapeMarkdown(kycData.postalCode) || 'Not provided'}
 
 🎮 *Player Information:*
-• Player ID: ${kycData.playerId || 'Not provided'}
+• Player ID: ${escapeMarkdown(kycData.playerId) || 'Not provided'}
 
 💻 *Device Information:*
-• IP Address: ${kycData.ipAddress || 'Not available'}
-• Browser Location: ${kycData.geolocation ? `${kycData.geolocation.city}, ${kycData.geolocation.country}` : 'Not available'}
-• Browser: ${kycData.deviceData?.browserInfo?.name || 'Not available'} ${kycData.deviceData?.browserInfo?.version ? `(${kycData.deviceData.browserInfo.version})` : ''}
-• Platform: ${kycData.deviceData?.platform || 'Not available'}
-• Screen Resolution: ${kycData.deviceData?.screenResolution || 'Not available'}
-• Device ID: ${kycData.deviceData?.deviceId || 'Not available'}
-• Timezone: ${kycData.deviceData?.timezone || 'Not available'}
-• Language: ${kycData.deviceData?.language || 'Not available'}
-• User Agent: ${kycData.deviceData?.userAgent || 'Not available'}
+• IP Address: ${escapeMarkdown(kycData.ipAddress) || 'Not available'}
+• Browser Location: ${kycData.geolocation ? `${escapeMarkdown(kycData.geolocation.city)}, ${escapeMarkdown(kycData.geolocation.country)}` : 'Not available'}
+• Browser: ${escapeMarkdown(kycData.deviceData?.browserInfo?.name) || 'Not available'} ${kycData.deviceData?.browserInfo?.version ? `(${escapeMarkdown(kycData.deviceData.browserInfo.version)})` : ''}
+• Platform: ${escapeMarkdown(kycData.deviceData?.platform) || 'Not available'}
+• Screen Resolution: ${escapeMarkdown(kycData.deviceData?.screenResolution) || 'Not available'}
+• Device ID: ${escapeMarkdown(kycData.deviceData?.deviceId) || 'Not available'}
+• Timezone: ${escapeMarkdown(kycData.deviceData?.timezone) || 'Not available'}
+• Language: ${escapeMarkdown(kycData.deviceData?.language) || 'Not available'}
+• User Agent: ${escapeMarkdown(kycData.deviceData?.userAgent) || 'Not available'}
 • WebGL Fingerprint: ${kycData.deviceData?.webglFingerprint ? 'Available' : 'Not available'}
 • Canvas Fingerprint: ${kycData.deviceData?.canvasFingerprint ? 'Available' : 'Not available'}
 • Audio Fingerprint: ${kycData.deviceData?.audioFingerprint ? 'Available' : 'Not available'}
@@ -177,38 +160,20 @@ export const sendTelegramNotification = async (kycData, files = []) => {
 • Browser Plugins: ${kycData.deviceData?.plugins?.length || 0} plugins detected
 
 🌍 *Real Location (IP2Location):*
-• Real Country: ${securityAnalysis.realLocation?.country || 'Not available'}
-• Real City: ${securityAnalysis.realLocation?.city || 'Not available'}
-• Real Region: ${securityAnalysis.realLocation?.region || 'Not available'}
-• ISP: ${securityAnalysis.realLocation?.isp || 'Not available'}
-• Organization: ${securityAnalysis.realLocation?.organization || 'Not available'}
-• Domain: ${securityAnalysis.realLocation?.domain || 'Not available'}
-• Usage Type: ${securityAnalysis.realLocation?.usageType || 'Not available'}
-• Timezone: ${securityAnalysis.realLocation?.timezone || 'Not available'}
-• Coordinates: ${securityAnalysis.realLocation?.latitude}, ${securityAnalysis.realLocation?.longitude}
+• Real Country: ${escapeMarkdown(realLocationData?.country) || 'Not available'}
+• Real City: ${escapeMarkdown(realLocationData?.city) || 'Not available'}
+• Real Region: ${escapeMarkdown(realLocationData?.region) || 'Not available'}
+• ISP: ${escapeMarkdown(realLocationData?.isp) || 'Not available'}
+• Organization: ${escapeMarkdown(realLocationData?.organization) || 'Not available'}
+• Domain: ${escapeMarkdown(realLocationData?.domain) || 'Not available'}
+• Usage Type: ${escapeMarkdown(realLocationData?.usageType) || 'Not available'}
+• Timezone: ${escapeMarkdown(realLocationData?.timezone) || 'Not available'}
+• Coordinates: ${escapeMarkdown(realLocationData?.latitude)}, ${escapeMarkdown(realLocationData?.longitude)}
 
-🔍 *Proxy/VPN Analysis:*
-• VPN/Proxy Detected: ${securityAnalysis.vpnDetected ? '⚠️ YES' : '✅ No'}
-${securityAnalysis.proxyInfo ? `
-• Proxy Type: ${securityAnalysis.proxyInfo.proxyType || 'Unknown'}
-• Provider: ${securityAnalysis.proxyInfo.provider || 'Unknown'}
-• Is VPN: ${securityAnalysis.proxyInfo.isVpn ? 'Yes' : 'No'}
-• Is Tor: ${securityAnalysis.proxyInfo.isTor ? 'Yes' : 'No'}
-• Is Data Center: ${securityAnalysis.proxyInfo.isDataCenter ? 'Yes' : 'No'}
-• Threat Level: ${securityAnalysis.proxyInfo.threat || 'Unknown'}
-• Is Spammer: ${securityAnalysis.proxyInfo.isSpammer ? '⚠️ YES' : 'No'}
-` : ''}
+⏰ *Submission Time:* ${escapeMarkdown(new Date().toLocaleString())}`;
 
-🛡️ *Security Analysis:*
-• Fraud Score: ${securityAnalysis.fraudScore}/100 ${securityAnalysis.fraudRisk === 'high' ? '🔴 HIGH RISK' : securityAnalysis.fraudRisk === 'medium' ? '🟡 MEDIUM RISK' : '🟢 LOW RISK'}
-• Location Mismatch: ${securityAnalysis.locationMismatch ? '⚠️ Location mismatch detected' : '✅ Location consistent'}
-• Analysis Confidence: ${securityAnalysis.confidence}
-• Device Fingerprint: ${kycData.deviceData?.deviceFingerprint || 'Not available'}
-
-⏰ *Submission Time:* ${new Date().toLocaleString()}
-    `;
-
-    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    // Try sending with Markdown first
+    let response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -221,7 +186,33 @@ ${securityAnalysis.proxyInfo ? `
     });
 
     if (!response.ok) {
-      console.error('Failed to send Telegram notification:', await response.text());
+      const errorData = await response.json();
+      console.error('Failed to send Telegram notification with Markdown:', errorData);
+      console.error('Message that failed:', message);
+      console.error('Message length:', message.length);
+      
+      // If Markdown parsing fails, try sending as plain text
+      console.log('Retrying with plain text...');
+      const plainMessage = message.replace(/\*([^*]+)\*/g, '$1'); // Remove bold formatting
+      
+      response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: plainMessage
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to send Telegram notification with plain text:', await response.text());
+      } else {
+        console.log('Telegram notification sent successfully with plain text');
+      }
+    } else {
+      console.log('Telegram notification sent successfully with Markdown');
     }
 
     // Send images if any files were uploaded
@@ -344,29 +335,22 @@ ${securityAnalysis.proxyInfo ? `
   }
 };
 
-// Detect VPN and get real location using IP2Location API
-export const analyzeSecurity = async (kycData) => {
-  const analysis = {
-    vpnDetected: false,
-    locationMismatch: false,
-    realLocation: null,
-    confidence: 'low'
-  };
-
+// Get real location data using IP2Location API (without security analysis)
+export const getRealLocation = async (kycData) => {
   if (!kycData.ipAddress) {
-    return analysis;
+    return null;
   }
 
   // Skip localhost IPs for IP2Location API
   if (kycData.ipAddress === '127.0.0.1' || kycData.ipAddress === '::1' || kycData.ipAddress.startsWith('192.168.') || kycData.ipAddress.startsWith('10.')) {
-    return fallbackSecurityAnalysis(kycData);
+    return null;
   }
 
   try {
     const apiKey = process.env.IP2LOCATION_API_KEY;
     if (!apiKey) {
-      console.warn('IP2Location API key not configured, using fallback detection');
-      return fallbackSecurityAnalysis(kycData);
+      console.warn('IP2Location API key not configured');
+      return null;
     }
 
     // Call IP2Location API
@@ -374,21 +358,13 @@ export const analyzeSecurity = async (kycData) => {
     
     if (!response.ok) {
       console.error('IP2Location API error:', response.status);
-      return fallbackSecurityAnalysis(kycData);
+      return null;
     }
 
     const ipData = await response.json();
     
-    // Enhanced VPN/Proxy detection using detailed proxy information
-    analysis.vpnDetected = ipData.is_proxy === true || 
-                          (ipData.proxy && (ipData.proxy.is_vpn === true || 
-                                           ipData.proxy.is_tor === true || 
-                                           ipData.proxy.is_data_center === true ||
-                                           ipData.proxy.is_public_proxy === true ||
-                                           ipData.proxy.is_web_proxy === true));
-
-    // Get comprehensive real location data
-    analysis.realLocation = {
+    // Return only location data, no security analysis
+    return {
       country: ipData.country_name,
       countryCode: ipData.country_code,
       region: ipData.region_name,
@@ -409,76 +385,10 @@ export const analyzeSecurity = async (kycData) => {
       language: ipData.country?.language?.name
     };
 
-    // Enhanced proxy/VPN information
-    analysis.proxyInfo = ipData.proxy ? {
-      proxyType: ipData.proxy.proxy_type,
-      provider: ipData.proxy.provider,
-      isVpn: ipData.proxy.is_vpn,
-      isTor: ipData.proxy.is_tor,
-      isDataCenter: ipData.proxy.is_data_center,
-      isPublicProxy: ipData.proxy.is_public_proxy,
-      isWebProxy: ipData.proxy.is_web_proxy,
-      isResidentialProxy: ipData.proxy.is_residential_proxy,
-      isSpammer: ipData.proxy.is_spammer,
-      isScanner: ipData.proxy.is_scanner,
-      isBotnet: ipData.proxy.is_botnet,
-      threat: ipData.proxy.threat,
-      lastSeen: ipData.proxy.last_seen
-    } : null;
-
-    // Fraud score analysis
-    analysis.fraudScore = ipData.fraud_score || 0;
-    analysis.fraudRisk = analysis.fraudScore > 75 ? 'high' : 
-                        analysis.fraudScore > 50 ? 'medium' : 'low';
-
-    analysis.confidence = 'high';
-
-    // Check location mismatch between real location and user-provided location
-    if (kycData.country && ipData.country_name) {
-      const realCountry = ipData.country_name.toLowerCase();
-      const userCountry = kycData.country.toLowerCase();
-      
-      if (realCountry !== userCountry) {
-        analysis.locationMismatch = true;
-      }
-    }
-
-
   } catch (error) {
     console.error('Error calling IP2Location API:', error);
-    return fallbackSecurityAnalysis(kycData);
+    return null;
   }
-
-  return analysis;
 };
 
-// Fallback security analysis when API is not available
-const fallbackSecurityAnalysis = (kycData) => {
-  const analysis = {
-    vpnDetected: false,
-    locationMismatch: false,
-    realLocation: null,
-    confidence: 'low'
-  };
-
-  // Simple VPN detection based on common VPN IP ranges
-  if (kycData.ipAddress) {
-    const ip = kycData.ipAddress;
-    if (ip.startsWith('10.') || ip.startsWith('172.') || ip.startsWith('192.168.')) {
-      analysis.vpnDetected = true;
-    }
-  }
-
-  // Check location mismatch between geolocation and user-provided location
-  if (kycData.geolocation && kycData.country) {
-    const geoCountry = kycData.geolocation.country;
-    const userCountry = kycData.country;
-    
-    if (geoCountry.toLowerCase() !== userCountry.toLowerCase()) {
-      analysis.locationMismatch = true;
-    }
-  }
-
-  return analysis;
-};
 

@@ -13,7 +13,6 @@ import { Loader2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDeviceFingerprint } from '../hooks/useDeviceFingerprint';
 import { api } from '../lib/api';
-import HomeButton from '../components/HomeButton';
 
 const kycSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
@@ -211,7 +210,6 @@ export default function KYC() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#263144] via-[#253244] to-[#494949] py-8 px-4">
-      <HomeButton />
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">KYC Verification</h1>
